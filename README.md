@@ -5,8 +5,9 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phase 0 (Foundation) and Phase 1 (Onboarding) complete.** See
-[`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
+**Status: Phases 0–2 complete** — foundation, onboarding, and the dashboard with
+weight and step logging. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what
+ships when.
 
 ---
 
@@ -86,7 +87,8 @@ Two rules carry most of the weight:
 
 Business-critical calculations are unit-tested with deterministic inputs:
 BMR and TDEE estimation, macro allocation, safety floors, weight moving
-averages and trend, unit conversion and shopping-list aggregation, date and age
+averages and trend, rate-vs-goal assessment, step summarisation, pending-action
+derivation, unit conversion and shopping-list aggregation, date and age
 arithmetic, and the onboarding-to-domain mapping.
 
 ```bash

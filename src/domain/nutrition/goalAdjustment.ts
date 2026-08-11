@@ -92,24 +92,50 @@ export function computeGoalTarget(input: GoalTargetInput): GoalTargetResult {
   };
 }
 
+export type RateStatus = 'on_target' | 'above_band' | 'below_band';
+
 /**
- * Whether an observed rate of weight change sits inside the goal's intended
- * band. Used by the weekly check-in to decide whether anything needs to change
- * at all — "no change required" is a valid and common answer.
+ * A small tolerance either side of the band, because the trend estimate feeding
+ * this is itself noisy. Without it a user hovering at the boundary would be
+ * told their rate was wrong every other week.
+ */
+const RATE_TOLERANCE_PERCENT = 0.05;
+
+/**
+ * Where an observed rate of weight change sits relative to the goal's intended
+ * band.
+ *
+ * `above_band` and `below_band` are directional, not judgemental: gaining
+ * faster than a lean bulk intends is `above_band`, and so is losing more slowly
+ * than a cut intends. What that means for the user depends on the goal, so the
+ * interpretation belongs to the caller.
+ */
+export function classifyRate(
+  goal: GoalType,
+  observedKgPerWeek: number,
+  weightKg: number,
+): RateStatus {
+  if (weightKg <= 0) throw new Error('classifyRate: weightKg must be positive');
+
+  const band = GOAL_RATE_BANDS[goal];
+  const observedPercent = (observedKgPerWeek / weightKg) * 100;
+
+  if (observedPercent > band.maxPercentPerWeek + RATE_TOLERANCE_PERCENT) return 'above_band';
+  if (observedPercent < band.minPercentPerWeek - RATE_TOLERANCE_PERCENT) return 'below_band';
+  return 'on_target';
+}
+
+/**
+ * Whether an observed rate sits inside the goal's intended band. Used by the
+ * weekly check-in to decide whether anything needs to change at all — "no
+ * change required" is a valid and common answer.
  */
 export function isRateOnTarget(
   goal: GoalType,
   observedKgPerWeek: number,
   weightKg: number,
 ): boolean {
-  const band = GOAL_RATE_BANDS[goal];
-  const observedPercent = (observedKgPerWeek / weightKg) * 100;
-  // A small tolerance, because weight-trend estimates are themselves noisy.
-  const tolerance = 0.05;
-  return (
-    observedPercent >= band.minPercentPerWeek - tolerance &&
-    observedPercent <= band.maxPercentPerWeek + tolerance
-  );
+  return classifyRate(goal, observedKgPerWeek, weightKg) === 'on_target';
 }
 
 export const GOAL_LABELS: Record<GoalType, string> = {

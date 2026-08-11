@@ -51,16 +51,35 @@ user on a dashboard showing their own numbers, with the derivation viewable.
 
 ---
 
-## Phase 2 — Dashboard foundation ⬜
+## Phase 2 — Dashboard foundation ✅
 
-- Home dashboard: goal/phase, calories, protein, steps, today's workout,
-  bodyweight + 7-day average, streak, pending actions
-- Weight logging (single entry per day, editable) + 7-day average display
-- Manual step entry
-- "Still to do" list derived from targets minus logs
+- ✅ Home dashboard showing goal/phase, daily targets, bodyweight + 7-day
+  average + trend, steps vs goal, and a "still to do" list
+- ✅ Weight logging — one editable entry per day, upserted on
+  `(user_id, logged_on)`, with the 7-day average given equal billing to the
+  daily reading
+- ✅ Manual step entry, with a 7-day average that counts only logged days
+- ✅ `summarizeWeight` — assesses the observed rate against the goal's band and
+  explains the verdict in the user's terms
+- ✅ `summarizeSteps` and `estimatedDailySteps`
+- ✅ `buildPendingActions` — the "still to do" list, derived from targets minus
+  logs
 
-**Done when:** the dashboard reads only from logs and domain functions — no
-placeholder data anywhere in the render path.
+**Deferred by dependency, not skipped.** The dashboard has slots for two things
+that need later phases, and the plumbing is already in place:
+
+| Item | Needs | State today |
+|---|---|---|
+| Calories/protein consumed | Phase 3 food logging | `NutritionTargetsCard` takes `consumed`; `null` renders the targets as a list rather than bars pinned at zero |
+| Today's workout | Phase 6 planner | `buildPendingActions` takes a nullable `workout`; `null` emits no action |
+| Streaks | Phase 9 | Not started — belongs with the XP and achievement work |
+
+In `buildPendingActions`, `null` means "this capability does not exist", not
+"the user has done nothing". Telling someone to log food before food logging
+exists would be a bug, and the tests assert the silence.
+
+**Done:** the dashboard reads only from logs and pure domain functions. There is
+no placeholder data in the render path.
 
 ---
 
@@ -150,6 +169,8 @@ recommendation cites its actual numbers.
 - XP ledger and totals
 - Achievements + unlock detection
 - Five independent streaks; training streak respects scheduled rest days
+- Streak display on the dashboard (deferred here from phase 2, since a training
+  streak cannot respect rest days before training plans exist)
 
 ---
 
@@ -182,11 +203,9 @@ Must be green before a phase is considered complete. A bundle check
 (`npx expo export --platform web`) is run at the end of each phase as well —
 type checking does not catch a broken import graph or a route conflict.
 
-### Phase 0/1 verification record
+### Verification record
 
-| Check | Result |
-|---|---|
-| `tsc --noEmit` | clean |
-| `eslint .` | clean |
-| `vitest run` | 168 tests, 10 files, passing |
-| `expo export --platform web` | bundles; 20 routes emitted |
+| Phase | `tsc` | `eslint` | `vitest` | `expo export --platform web` |
+|---|---|---|---|---|
+| 0 + 1 | clean | clean | 168 tests / 10 files | 20 routes |
+| 2 | clean | clean | 211 tests / 13 files | 20 routes |
