@@ -5,9 +5,9 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–2 complete** — foundation, onboarding, and the dashboard with
-weight and step logging. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what
-ships when.
+**Status: Phases 0–3 complete** — foundation, onboarding, the dashboard with
+weight and step logging, and nutrition tracking with barcode scanning. See
+[`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
 
 ---
 
@@ -82,14 +82,20 @@ Two rules carry most of the weight:
    move server-side unchanged.
 2. **Authorisation is in the database.** The anon key in the bundle grants
    nothing on its own; every table is behind `auth.uid() = user_id` policies.
+3. **Unknown is not zero.** External food data is routinely incomplete. A
+   missing nutrient stays `null` all the way from the provider to the daily
+   total, which reports which values are lower bounds rather than presenting a
+   silently-low number as exact.
 
 ## Testing
 
 Business-critical calculations are unit-tested with deterministic inputs:
 BMR and TDEE estimation, macro allocation, safety floors, weight moving
 averages and trend, rate-vs-goal assessment, step summarisation, pending-action
-derivation, unit conversion and shopping-list aggregation, date and age
-arithmetic, and the onboarding-to-domain mapping.
+derivation, food scaling and daily aggregation, food-data plausibility checks,
+barcode check digits, the Open Food Facts mapping, unit conversion and
+shopping-list aggregation, date and age arithmetic, and the onboarding-to-domain
+mapping.
 
 ```bash
 npm test

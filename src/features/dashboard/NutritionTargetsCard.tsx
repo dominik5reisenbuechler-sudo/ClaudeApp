@@ -1,13 +1,18 @@
 import { View } from 'react-native';
 
 import { Card, MacroProgress, Text } from '@/components/ui';
+import { NUTRIENT_LABELS } from '@/domain/nutrition/dailyTotals';
+import type { NutrientKey } from '@/domain/nutrition/dailyTotals';
 import type { UserTargetRow } from '@/types/database';
 import { useTheme } from '@/theme/ThemeProvider';
 
 interface NutritionTargetsCardProps {
   target: UserTargetRow;
-  /** `null` until food logging exists (phase 3). */
+  /** `null` when food logging is unavailable. */
   consumed: { energyKcal: number; proteinG: number; carbsG: number; fatG: number; fiberG: number } | null;
+  /** Nutrients whose totals are a lower bound because some entry had no value. */
+  incompleteNutrients?: readonly NutrientKey[];
+  onPress?: () => void;
 }
 
 /**
@@ -19,12 +24,17 @@ interface NutritionTargetsCardProps {
  * a real, alarming state. Once `consumed` is supplied the card switches to the
  * progress form without any change at the call site.
  */
-export function NutritionTargetsCard({ target, consumed }: NutritionTargetsCardProps) {
+export function NutritionTargetsCard({
+  target,
+  consumed,
+  incompleteNutrients = [],
+  onPress,
+}: NutritionTargetsCardProps) {
   const theme = useTheme();
 
   if (consumed) {
     return (
-      <Card>
+      <Card {...(onPress ? { onPress } : {})}>
         <View style={{ gap: theme.spacing.lg }}>
           <MacroProgress
             kind="energy"
@@ -52,6 +62,14 @@ export function NutritionTargetsCard({ target, consumed }: NutritionTargetsCardP
             consumed={consumed.fiberG}
             target={target.fiber_g}
           />
+
+          {incompleteNutrients.length > 0 ? (
+            <Text variant="caption" tone="tertiary">
+              {`Some ${incompleteNutrients
+                .map((key) => NUTRIENT_LABELS[key])
+                .join(' and ')} values are unknown, so those totals are a lower bound.`}
+            </Text>
+          ) : null}
         </View>
       </Card>
     );

@@ -43,6 +43,9 @@ export type DietType = (typeof DIET_TYPES)[number];
 export const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export type MealType = (typeof MEAL_TYPES)[number];
 
+export const FOOD_SOURCES = ['generic', 'branded', 'user', 'barcode', 'recipe'] as const;
+export type FoodSource = (typeof FOOD_SOURCES)[number];
+
 export const UNIT_SYSTEMS = ['metric', 'imperial'] as const;
 export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
 

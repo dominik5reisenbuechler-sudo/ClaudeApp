@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader } from '@/components/layout';
 import { Callout, ErrorState, LoadingState, Text } from '@/components/ui';
 import { summarizeSteps } from '@/domain/activity/steps';
+import { totalsFor } from '@/domain/nutrition/dailyTotals';
 import { GOAL_LABELS } from '@/domain/nutrition/goalAdjustment';
 import { buildPendingActions } from '@/domain/progress/pendingActions';
 import { summarizeWeight } from '@/domain/progress/weightSummary';
@@ -12,6 +14,7 @@ import { PendingActionsCard } from '@/features/dashboard/PendingActionsCard';
 import { StepsCard } from '@/features/dashboard/StepsCard';
 import { WeightCard } from '@/features/dashboard/WeightCard';
 import { useStepLogs, useWeightLogs } from '@/hooks/useLogs';
+import { toLoggedEntries, useFoodEntries } from '@/hooks/useNutrition';
 import { useActiveGoal, useActiveTarget, useProfile } from '@/hooks/useProfile';
 import { useTheme } from '@/theme/ThemeProvider';
 import { todayIsoDate } from '@/utils/date';
@@ -27,6 +30,7 @@ import { todayIsoDate } from '@/utils/date';
  */
 export default function HomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const today = todayIsoDate();
 
   const profile = useProfile();
@@ -34,11 +38,22 @@ export default function HomeScreen() {
   const target = useActiveTarget();
   const weights = useWeightLogs(undefined, today);
   const steps = useStepLogs(undefined, today);
+  const foodEntries = useFoodEntries(today);
 
   const isLoading =
-    profile.isLoading || goal.isLoading || target.isLoading || weights.isLoading || steps.isLoading;
+    profile.isLoading ||
+    goal.isLoading ||
+    target.isLoading ||
+    weights.isLoading ||
+    steps.isLoading ||
+    foodEntries.isLoading;
   const isError =
-    profile.isError || goal.isError || target.isError || weights.isError || steps.isError;
+    profile.isError ||
+    goal.isError ||
+    target.isError ||
+    weights.isError ||
+    steps.isError ||
+    foodEntries.isError;
 
   const goalType = goal.data?.goal ?? 'maintenance';
   const stepGoal = target.data?.step_goal ?? 8000;
@@ -53,6 +68,11 @@ export default function HomeScreen() {
     [steps.data, stepGoal, today],
   );
 
+  const consumed = useMemo(
+    () => totalsFor(toLoggedEntries(foodEntries.data ?? [])),
+    [foodEntries.data],
+  );
+
   const pendingActions = useMemo(() => {
     if (!target.data) return [];
     return buildPendingActions({
@@ -64,12 +84,12 @@ export default function HomeScreen() {
       },
       weightLoggedToday: weightSummary.loggedToday,
       steps: stepsSummary,
-      // Both null until the phases that provide them land. See the doc comment
-      // on buildPendingActions — null means "unavailable", not "nothing done".
-      nutrition: null,
+      nutrition: { consumedKcal: consumed.energyKcal, consumedProteinG: consumed.proteinG },
+      // Null until the training planner exists. See the doc comment on
+      // buildPendingActions — null means "unavailable", not "nothing done".
       workout: null,
     });
-  }, [target.data, today, weightSummary.loggedToday, stepsSummary]);
+  }, [target.data, today, weightSummary.loggedToday, stepsSummary, consumed]);
 
   if (isLoading) {
     return (
@@ -107,7 +127,18 @@ export default function HomeScreen() {
       {target.data ? (
         <>
           <PendingActionsCard actions={pendingActions} />
-          <NutritionTargetsCard target={target.data} consumed={null} />
+          <NutritionTargetsCard
+            target={target.data}
+            consumed={{
+              energyKcal: consumed.energyKcal,
+              proteinG: consumed.proteinG,
+              carbsG: consumed.carbsG,
+              fatG: consumed.fatG,
+              fiberG: consumed.fiberG,
+            }}
+            incompleteNutrients={consumed.incompleteNutrients}
+            onPress={() => router.push('/nutrition')}
+          />
           <WeightCard summary={weightSummary} />
           <StepsCard summary={stepsSummary} />
 

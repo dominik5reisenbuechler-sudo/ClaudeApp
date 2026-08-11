@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0004.
+ * Database types for the tables created by migrations 0001–0005.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -15,9 +15,11 @@ import type {
   ActivityLevel,
   DietType,
   ExperienceLevel,
+  FoodSource,
   GoalType,
   IsoDate,
   MealPrepPreference,
+  MealType,
   OccupationActivity,
   Sex,
   TargetSource,
@@ -190,6 +192,78 @@ export type ProgressPhotoRow = {
 }
 
 /**
+ * Foods. Every macro column except `calories_per_100g` is nullable — external
+ * product data is routinely incomplete, and null means "unknown", never zero.
+ */
+export type FoodRow = Timestamps & {
+  id: string;
+  name: string;
+  brand: string | null;
+  barcode: string | null;
+  serving_size: number | null;
+  serving_unit: string | null;
+  calories_per_100g: number;
+  protein_per_100g: number | null;
+  carbs_per_100g: number | null;
+  fat_per_100g: number | null;
+  fiber_per_100g: number | null;
+  sugar_per_100g: number | null;
+  sodium_mg_per_100g: number | null;
+  source: FoodSource;
+  verified: boolean;
+  is_public: boolean;
+  created_by: string | null;
+  external_id: string | null;
+  provider: string | null;
+}
+
+/**
+ * A logged food. The macro columns are a SNAPSHOT taken at log time, not a
+ * live join — correcting a food must not rewrite what the user ate last month.
+ */
+export type FoodEntryRow = Timestamps & {
+  id: string;
+  user_id: string;
+  logged_on: IsoDate;
+  meal_type: MealType;
+  food_id: string | null;
+  saved_meal_id: string | null;
+  recipe_id: string | null;
+  quantity: number;
+  unit: string;
+  display_name: string;
+  energy_kcal: number;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  fiber_g: number | null;
+  sort_order: number;
+  note: string | null;
+}
+
+export type SavedMealRow = Timestamps & {
+  id: string;
+  user_id: string;
+  name: string;
+  meal_type: MealType | null;
+}
+
+export type SavedMealItemRow = {
+  id: string;
+  saved_meal_id: string;
+  food_id: string;
+  quantity_g: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export type FoodFavoriteRow = {
+  user_id: string;
+  food_id: string;
+  created_at: string;
+}
+
+/**
  * Insert/Update shapes: database-generated columns become optional, everything
  * else stays as declared. `Insert` still requires genuinely required columns,
  * so a missing `user_id` is a compile error rather than an RLS rejection.
@@ -264,6 +338,41 @@ export type Database = {
         Insertable<RecoveryLogRow, Exclude<keyof RecoveryLogRow, 'user_id' | 'logged_on'>>,
         Updatable<RecoveryLogRow>
       >;
+      foods: TableDefinition<
+        FoodRow,
+        Insertable<
+          FoodRow,
+          | 'brand' | 'barcode' | 'serving_size' | 'serving_unit'
+          | 'protein_per_100g' | 'carbs_per_100g' | 'fat_per_100g' | 'fiber_per_100g'
+          | 'sugar_per_100g' | 'sodium_mg_per_100g'
+          | 'source' | 'verified' | 'is_public' | 'created_by' | 'external_id' | 'provider'
+        >,
+        Updatable<FoodRow>
+      >;
+      food_entries: TableDefinition<
+        FoodEntryRow,
+        Insertable<
+          FoodEntryRow,
+          | 'logged_on' | 'food_id' | 'saved_meal_id' | 'recipe_id' | 'unit'
+          | 'protein_g' | 'carbs_g' | 'fat_g' | 'fiber_g' | 'sort_order' | 'note'
+        >,
+        Updatable<FoodEntryRow>
+      >;
+      saved_meals: TableDefinition<
+        SavedMealRow,
+        Insertable<SavedMealRow, 'meal_type'>,
+        Updatable<SavedMealRow>
+      >;
+      saved_meal_items: TableDefinition<
+        SavedMealItemRow,
+        Insertable<SavedMealItemRow, 'sort_order'>,
+        Updatable<SavedMealItemRow>
+      >;
+      food_favorites: TableDefinition<
+        FoodFavoriteRow,
+        Insertable<FoodFavoriteRow>,
+        Updatable<FoodFavoriteRow>
+      >;
       progress_photos: TableDefinition<
         ProgressPhotoRow,
         Insertable<ProgressPhotoRow, 'taken_on' | 'pose'>,
@@ -271,7 +380,13 @@ export type Database = {
       >;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      /** Fuzzy food search — see supabase/migrations/0005_nutrition.sql. */
+      search_foods: {
+        Args: { search_term: string; max_results?: number };
+        Returns: FoodRow[];
+      };
+    };
     Enums: {
       sex: Sex;
       goal_type: GoalType;
@@ -286,6 +401,8 @@ export type Database = {
       measurement_site: MeasurementSite;
       log_source: LogSource;
       consent_kind: ConsentKind;
+      meal_type: MealType;
+      food_source: FoodSource;
     };
     CompositeTypes: Record<string, never>;
   };

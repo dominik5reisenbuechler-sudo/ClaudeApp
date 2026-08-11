@@ -83,17 +83,39 @@ no placeholder data in the render path.
 
 ---
 
-## Phase 3 — Nutrition ⬜
+## Phase 3 — Nutrition ✅
 
-- `foods` schema + search (trigram)
-- `FoodProvider` interface + Open Food Facts implementation + local cache
-- Barcode scanner (`expo-camera`), EAN/UPC
-- Food logging by meal type; quick add; favourites; recents; saved meals
-- Nutrition Today screen: consumed / target / remaining for kcal, P, C, F, fibre
-- Graceful handling of incomplete external product data
+- ✅ `foods` schema with a trigram index and a `search_foods()` function
+  (`security invoker`, so RLS still decides visibility)
+- ✅ `FoodProvider` interface + Open Food Facts implementation + local cache
+  keyed on `(provider, external_id)`
+- ✅ Barcode scanner (`expo-camera`), EAN-8/13 and UPC-A, with local check-digit
+  validation before any network call
+- ✅ Food logging by meal type; quick add; custom foods; favourites; recents
+- ✅ Nutrition → Today: consumed / target / remaining for kcal, P, C, F, fibre,
+  per meal and per day
+- ✅ Nutrition sub-navigation (Today, Recipes, Meal Plan, Shopping List)
+- ✅ Dashboard now shows real consumption, closing the loop phase 2 left open
+- ✅ Incomplete external data handled explicitly rather than zeroed
 
-**Done when:** a barcode scan produces a logged entry with a macro snapshot, and
-a product missing fibre data logs without crashing or silently zeroing.
+**Two decisions worth recording.**
+
+*Unknown is not zero.* Every macro column except energy is nullable, `null`
+propagates through scaling and aggregation, and `totalsFor` reports which
+nutrients are incomplete so the UI can mark a total as a lower bound. Summing
+`null` as `0` would produce a confident, silently-low number — the worst
+possible output for a value a user makes decisions against.
+
+*Energy is required.* A food with no energy value cannot be tracked at all, so
+the provider mapping fails rather than inventing a zero — and hands back
+whatever it salvaged, so the user completes a form instead of typing one from
+scratch.
+
+**Deferred:** saved meals have a schema and RLS but no UI yet; they are most
+useful alongside recipes, so the builder lands in phase 4.
+
+**Done:** a barcode scan produces a logged entry with a macro snapshot, and a
+product missing fibre data logs without crashing or silently zeroing.
 
 ---
 
@@ -209,3 +231,4 @@ type checking does not catch a broken import graph or a route conflict.
 |---|---|---|---|---|
 | 0 + 1 | clean | clean | 168 tests / 10 files | 20 routes |
 | 2 | clean | clean | 211 tests / 13 files | 20 routes |
+| 3 | clean | clean | 276 tests / 17 files | 30 routes |
