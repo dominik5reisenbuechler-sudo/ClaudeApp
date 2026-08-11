@@ -1,0 +1,192 @@
+# MVP Plan
+
+Build order is sequential. A phase is not started until the previous phase
+type-checks, lints, passes tests, and is actually usable.
+
+**Status legend:** ✅ done · 🚧 in progress · ⬜ not started
+
+---
+
+## Phase 0 — Foundation ✅
+
+**Goal:** a running, typed, testable app shell with real auth and a real
+database, and no feature code yet.
+
+- ✅ Expo + TypeScript (strict) project, Expo Router file-based navigation
+- ✅ Folder structure per `ARCHITECTURE.md` §3
+- ✅ Design tokens (spacing, typography, radii, colour) + light/dark themes
+- ✅ Design-system components: Button, Card, StatCard, ProgressBar,
+  MacroProgress, Input, NumberInput, SearchInput, ScreenHeader, SectionHeader,
+  Screen, Chip, OptionCard, Modal/BottomSheet, EmptyState, LoadingState,
+  ErrorState
+- ✅ Supabase client, env validation, typed database definitions
+- ✅ Auth: sign up, sign in, sign out, forgot password, account deletion path
+- ✅ Migrations `0001`–`0004` with RLS on every table
+- ✅ Bottom tab navigation with the five sections
+- ✅ Vitest + ESLint + typecheck wired to npm scripts
+- ✅ Domain layer: energy, macros, weight trend, unit conversion — with tests
+
+**Definition of done:** an account can be created, the session persists across
+restarts, RLS denies cross-user reads, and `npm run verify` is green.
+
+---
+
+## Phase 1 — Onboarding ✅
+
+**Goal:** a new user goes from empty profile to a personalised calorie and macro
+target derived from documented equations.
+
+- ✅ Multi-step flow with a persisted draft (progress survives app close)
+- ✅ 13 steps: welcome → basics → body → activity → experience → equipment →
+  schedule → priorities → health → diet → restrictions → goal → review
+- ✅ Per-step Zod schemas, shared with React Hook Form
+- ✅ Safety screening (age, pregnancy, low BMI, ED-risk signals) surfaced on the
+  goal step *before* the choice, not applied silently afterwards
+- ✅ Target computation on review: BMR → initial TDEE → goal offset → macros
+- ✅ Persist `profiles`, `user_preferences`, `user_goals`, `user_targets`
+- ✅ Onboarding gate in the root layout
+
+**Definition of done:** completing onboarding writes four tables and lands the
+user on a dashboard showing their own numbers, with the derivation viewable.
+
+---
+
+## Phase 2 — Dashboard foundation ⬜
+
+- Home dashboard: goal/phase, calories, protein, steps, today's workout,
+  bodyweight + 7-day average, streak, pending actions
+- Weight logging (single entry per day, editable) + 7-day average display
+- Manual step entry
+- "Still to do" list derived from targets minus logs
+
+**Done when:** the dashboard reads only from logs and domain functions — no
+placeholder data anywhere in the render path.
+
+---
+
+## Phase 3 — Nutrition ⬜
+
+- `foods` schema + search (trigram)
+- `FoodProvider` interface + Open Food Facts implementation + local cache
+- Barcode scanner (`expo-camera`), EAN/UPC
+- Food logging by meal type; quick add; favourites; recents; saved meals
+- Nutrition Today screen: consumed / target / remaining for kcal, P, C, F, fibre
+- Graceful handling of incomplete external product data
+
+**Done when:** a barcode scan produces a logged entry with a macro snapshot, and
+a product missing fibre data logs without crashing or silently zeroing.
+
+---
+
+## Phase 4 — Recipes ⬜
+
+- Recipe schema + seed set across breakfast/lunch/dinner/snack (original or
+  attributed content only — see `PRODUCT_SPEC.md` §4.4)
+- Discovery UI with category rails and filters
+- Recipe detail, favourites
+- Portion scaling (ingredients + macros), with non-scalable ingredients honoured
+- Smart recommendations ranked against remaining daily macros
+
+**Done when:** "620 kcal / 55 g protein remaining" returns a sensible ranked
+list respecting diet type, allergens and dislikes.
+
+---
+
+## Phase 5 — Meal planner ⬜
+
+- Week grid (Mon–Sun × 4 slots), add/remove/swap/copy meal, copy day, copy week
+- Auto-generation with the eight modes
+- Meal-prep mode: ingredient reuse across days
+- Shopping list generation with unit-normalised aggregation
+- Category grouping, checkboxes, `n / m completed`
+- Pantry subtraction
+
+**Done when:** 200 g + 180 g + 220 g chicken across three meals produces one
+`Chicken Breast — 600 g` line under Meat/Fish.
+
+---
+
+## Phase 6 — Training ⬜
+
+- Muscle + exercise reference data, `exercise_muscles` fractional credits
+- Workout plan generator (2–6 days, split selection per `SCIENTIFIC_RULES.md`
+  §4.8)
+- Workout logger: previous performance, target reps/RIR, set entry
+- Rest timer
+- Double-progression engine with its blocking conditions
+- Exercise substitution
+
+**Done when:** a logged week produces correct fractional weekly set counts per
+muscle, and progression is withheld under each documented blocking condition.
+
+---
+
+## Phase 7 — Progress ⬜
+
+- Bodyweight chart (daily + 7-day average + 30-day trend)
+- Measurements
+- Strength progression and personal records
+- Weekly volume per muscle, workout consistency
+- Optional progress photos (private bucket, signed URLs)
+
+---
+
+## Phase 8 — Adaptive engine ⬜
+
+- Adaptive TDEE estimator over a 14–28 day window with confidence scoring
+- Weekly check-in flow
+- Calorie/macro adjustment recommendations, confidence-gated
+- Training volume + deload recommendations
+- Explanation strings assembled from the real inputs
+- Accept/reject writes a new `user_targets` row
+
+**Done when:** the engine refuses to adjust at low confidence and every emitted
+recommendation cites its actual numbers.
+
+---
+
+## Phase 9 — Gamification ⬜
+
+- XP ledger and totals
+- Achievements + unlock detection
+- Five independent streaks; training streak respects scheduled rest days
+
+---
+
+## Phase 10 — Advanced ⬜
+
+- Apple HealthKit / Google Health Connect behind `HealthProvider`
+- AI coach over structured user data, with confirmation before any write
+- Smart-scale integrations
+- Package-size optimisation for shopping lists
+
+---
+
+## Cross-cutting, not deferrable
+
+These ship with the phase that first touches them, never "later":
+
+- **RLS** on every new table, in the same migration that creates it.
+- **Tests** for every new pure function.
+- **Safety guards** wherever a number reaches the user as advice.
+- **Explanations** attached to every recommendation at the point it is created.
+- **Consent + deletion** coverage for every new category of personal data.
+
+## Verification gate
+
+```
+npm run verify     # typecheck + lint + test
+```
+
+Must be green before a phase is considered complete. A bundle check
+(`npx expo export --platform web`) is run at the end of each phase as well —
+type checking does not catch a broken import graph or a route conflict.
+
+### Phase 0/1 verification record
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | clean |
+| `eslint .` | clean |
+| `vitest run` | 168 tests, 10 files, passing |
+| `expo export --platform web` | bundles; 20 routes emitted |
