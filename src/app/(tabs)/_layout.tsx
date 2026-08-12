@@ -48,6 +48,13 @@ export default function TabsLayout() {
       <Tabs.Screen name="nutrition" options={{ title: 'Nutrition' }} />
       <Tabs.Screen name="progress" options={{ title: 'Progress' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      {/*
+        The coach is a route, not a sixth tab. The spec fixes five product
+        areas (PRODUCT_SPEC.md §4.1), and a tab is a claim about how central
+        something is — the coach answers questions about the other five rather
+        than being one of them. Reached from the dashboard and from Profile.
+      */}
+      <Tabs.Screen name="coach" options={{ href: null }} />
     </Tabs>
   );
 }

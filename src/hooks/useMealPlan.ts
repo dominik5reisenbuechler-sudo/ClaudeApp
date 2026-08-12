@@ -17,6 +17,7 @@ import {
 } from '@/services/mealPlanService';
 import type { FullMealPlan } from '@/services/mealPlanService';
 import {
+  fetchPackSizes,
   fetchPantry,
   fetchPlannedIngredients,
   fetchShoppingListForPlan,
@@ -260,6 +261,24 @@ export function useGenerateShoppingList() {
       return saveShoppingList(user?.id as string, plan.id, lines);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [SHOPPING_KEY] }),
+  });
+}
+
+/**
+ * Retail pack sizes for the ingredients on a list.
+ *
+ * Fetched separately from the list itself: pack sizes are catalogue data that
+ * changes almost never, and the list is a document the user is editing in a
+ * shop. Joining them would refetch one every time the other changed.
+ */
+export function usePackSizes(ingredientIds: readonly string[]) {
+  const key = [...ingredientIds].sort().join(',');
+
+  return useQuery({
+    queryKey: ['pack-sizes', key],
+    queryFn: () => fetchPackSizes(ingredientIds),
+    enabled: ingredientIds.length > 0,
+    staleTime: 60 * 60_000,
   });
 }
 

@@ -22,6 +22,7 @@ import type {
   GoalType,
   IngredientCategory,
   IsoDate,
+  LogSource,
   MealPrepPreference,
   MealType,
   MovementPattern,
@@ -42,7 +43,6 @@ import type {
   UnitSystem,
 } from './domain';
 
-export type LogSource = 'manual' | 'healthkit' | 'health_connect' | 'smart_scale';
 export type MeasurementSite =
   | 'waist'
   | 'chest'
@@ -54,7 +54,7 @@ export type MeasurementSite =
   | 'shoulders';
 export type ConsentKind = 'terms' | 'privacy' | 'health_data' | 'analytics';
 
-export type { IngredientCategory, PlanMode };
+export type { IngredientCategory, LogSource, PlanMode };
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 

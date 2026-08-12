@@ -24,6 +24,17 @@ export async function searchLocalFoods(term: string, limit = 25): Promise<FoodRo
   return data ?? [];
 }
 
+/** One food by id, or null. Used to validate an id before logging against it. */
+export async function fetchFoodById(id: string): Promise<FoodRow | null> {
+  const { data, error } = await getSupabase()
+    .from('foods')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ?? null;
+}
+
 export async function findFoodByBarcode(barcode: string): Promise<FoodRow | null> {
   const { data, error } = await getSupabase()
     .from('foods')

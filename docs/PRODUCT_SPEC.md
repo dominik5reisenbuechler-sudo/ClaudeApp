@@ -185,11 +185,36 @@ Three rules keep this from working against the product:
   number rather than the honesty, so the points are kept away from anything
   that decides what the user eats or trains.
 
-### 4.10 AI coach (later phase)
+### 4.10 AI coach
 
 Structured-data-grounded assistant answering questions like "should I increase
-weight on bench press?" or "what can I cook with chicken, rice and peppers?".
-Never performs destructive writes without explicit user confirmation.
+weight on bench press?" or "am I gaining too fast?".
+
+It is **grounded**: it sees a summary of the last four weeks — targets, intake,
+weight trend, weekly sets, recent lifts — and answers from those numbers or says
+it cannot. What it does not know is named explicitly in the context, so it has
+been told what it must not guess at.
+
+It **cannot change anything**. The coach returns proposed actions; the user
+confirms each one; the app performs the write. That is a security boundary, not
+a courtesy: a model that can be steered by the text of a food label must not be
+able to change what someone eats. Its action vocabulary contains no destructive
+verb at all — there is no delete, no clear, no reset — so there is nothing for a
+prompt injection to reach for.
+
+The model key lives in an Edge Function, never in the app bundle.
+
+### 4.11 Health app and smart scales
+
+Bodyweight and steps import from Apple Health or Health Connect, behind a
+`HealthProvider` interface. **A manual entry always wins**: a sync fills gaps,
+never overwrites, and reports what it left alone. Nothing syncs automatically —
+the user grants consent, then presses sync, so "when did the app read this" has
+an answer.
+
+Smart scales need no separate integration. Withings, Renpho and Eufy write into
+the platform health store, so they arrive by this same route, and a hardware
+reading is recorded as one rather than as a phone entry.
 
 ---
 

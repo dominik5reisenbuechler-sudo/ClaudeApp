@@ -13,5 +13,6 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "dist", ".expo"]
+  "//": "supabase/functions is Deno, not React Native. It has its own globals and its own module resolution, so type-checking it with the app's config only produces noise. It is checked by `supabase functions deploy`.",
+  "exclude": ["node_modules", "dist", ".expo", "supabase/functions"]
 }

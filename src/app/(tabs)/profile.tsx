@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader, SectionHeader } from '@/components/layout';
 import { Button, Callout, Card, Chip, Text } from '@/components/ui';
+import { HealthSyncSection } from '@/features/profile/HealthSyncSection';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useActiveGoal, useActiveTarget, useProfile } from '@/hooks/useProfile';
 import { deleteAllUserData } from '@/services/accountService';
@@ -18,6 +20,7 @@ const THEME_OPTIONS: readonly { value: ThemePreference; label: string }[] = [
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { preference, setPreference } = useThemePreference();
   const { user, signOut } = useAuth();
   const profile = useProfile();
@@ -96,6 +99,25 @@ export default function ProfileScreen() {
             />
           ))}
         </View>
+      </View>
+
+      <HealthSyncSection />
+
+      <View>
+        <SectionHeader title="Coach" />
+        <Card>
+          <View style={{ gap: theme.spacing.md }}>
+            <Text variant="caption" tone="secondary">
+              Ask questions about your own numbers — whether you are gaining too fast, whether a
+              lift is ready for more weight. It answers from your logs or says it cannot.
+            </Text>
+            <Button
+              label="Ask the coach"
+              variant="secondary"
+              onPress={() => router.push('/coach')}
+            />
+          </View>
+        </Card>
       </View>
 
       <View>

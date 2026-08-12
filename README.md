@@ -5,15 +5,20 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–9 complete** — foundation, onboarding, the dashboard,
-nutrition tracking with barcode scanning, the recipe system, the weekly meal
-planner with an aggregated shopping list, the training side (programme
-generation, workout logger, progression engine), progress analytics with charts
-and personal records, and the adaptive engine: measured expenditure, the weekly
-check-in, and confidence-gated calorie, volume and deload recommendations that
-the user accepts or rejects, and gamification: an append-only XP ledger,
-achievements, and five streaks whose training streak excuses scheduled rest
-days. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
+**Status: phases 0–9 complete, phase 10 substantially done.** Foundation,
+onboarding, the dashboard, nutrition tracking with barcode scanning, recipes,
+the weekly meal planner with an aggregated shopping list, the training side
+(programme generation, workout logger, progression engine), progress analytics,
+the adaptive engine (measured expenditure, weekly check-in, confidence-gated
+recommendations the user accepts or rejects), and gamification (an append-only
+XP ledger, achievements, and five streaks whose training streak excuses
+scheduled rest days).
+
+Phase 10 adds shopping-list pack optimisation, health-sync reconciliation and a
+grounded AI coach that cannot write anything without a confirmation tap. The two
+native health modules — HealthKit and Health Connect — are the one thing
+outstanding; [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) sets out why, along with
+what ships when.
 
 ---
 
@@ -106,10 +111,14 @@ averages and trend, rate-vs-goal assessment, step summarisation, pending-action
 derivation, food scaling and daily aggregation, food-data plausibility checks,
 barcode check digits, the Open Food Facts mapping, recipe portion scaling,
 macro-fit recipe ranking, meal-plan generation across all eight modes, unit
-conversion and shopping-list aggregation, fractional training volume, the
-progression engine and its blocking conditions, split selection and programme
-generation, personal-record detection, strength trends, training consistency,
-date and age arithmetic, and the onboarding-to-domain mapping.
+conversion, shopping-list aggregation and retail pack selection, fractional
+training volume, the progression engine and its blocking conditions, split
+selection and programme generation, personal-record detection, strength trends,
+training consistency, the adaptive TDEE estimator and its confidence gates, the
+calorie/volume/deload recommendation engines, XP awards, streaks and achievement
+unlocks, health-sample reconciliation, the coach's context assembly and its
+action vocabulary, date and age arithmetic, and the onboarding-to-domain
+mapping.
 
 ```bash
 npm test
@@ -124,4 +133,10 @@ it moves the goal to maintenance and explains why rather than refusing to
 function.
 
 Health data is treated as sensitive: consent is explicit, storage is row-level
-isolated, and export and deletion are first-class. Nothing is sold.
+isolated, and export and deletion are first-class. Nothing is sold. Health-app
+import never runs on its own and never overwrites an entry you made yourself.
+
+The AI coach is grounded in your own logged data and **cannot change anything**.
+It proposes; you confirm; the app writes. Its action vocabulary contains no
+destructive verb at all, and its model key lives in an Edge Function rather than
+in the app bundle.

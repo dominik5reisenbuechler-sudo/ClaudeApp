@@ -127,7 +127,9 @@ src/
     gamification/             level card
   domain/
     nutrition/                energy, macros, weightTrend, tdeeEstimator,
-                              goalAdjustment
+                              goalAdjustment, packaging
+    coach/                    context assembly + the coach action vocabulary
+    health/                   reconciling synced samples with manual logs
     training/                 volume, progression, split generation
     activity/                 steps, activity factors
     progress/                 trends, PRs
@@ -138,8 +140,8 @@ src/
   services/                   supabase repositories
   integrations/
     foodProviders/            FoodProvider interface + OpenFoodFacts impl
-    health/                   HealthProvider interface + platform impls
-    ai/                       AI coach context assembly
+    health/                   HealthProvider interface + null impl
+    ai/                       CoachProvider interface + Edge Function client
   lib/                        supabase client, query client, storage, env
   theme/                      tokens, light/dark palettes, ThemeProvider
   types/                      shared domain + database types
@@ -147,7 +149,8 @@ src/
 
 supabase/
   migrations/                 timestamped SQL, applied in order
-  seed/                       muscles, exercises, starter recipes
+  seed/                       muscles, exercises, recipes, evidence, achievements
+  functions/                  Deno Edge Functions — where API keys live
 
 docs/                         this folder
 ```
@@ -238,9 +241,50 @@ The engine's own restraint is the part worth protecting:
   belongs in an Edge Function.
 - `.env` is git-ignored; `.env.example` documents the required keys.
 
+### Edge Function secrets
+
+The AI coach's model key is the second secret the system has, and it follows the
+same rule for the same reason: anything prefixed `EXPO_PUBLIC_` is readable by
+anyone who downloads the app, and a key that bills per token cannot be one of
+them. So `supabase/functions/coach/` holds it —
+
+```
+supabase secrets set ANTHROPIC_API_KEY=...
+supabase functions deploy coach
+```
+
+— and the function is also where the caller's session is verified and rate
+limited, neither of which a client could do to itself. It does *not* decide
+anything: the context is assembled by `domain/coach/context.ts` and the reply is
+validated by `domain/coach/actions.ts`, both on the client where they are
+tested. A second copy of the action vocabulary in Deno would be a second copy to
+keep in step.
+
+Without the secret the function returns 503 and the app shows the coach as
+switched off. Every other feature works, because the coach is an accelerator for
+things the user can already do by hand.
+
 ---
 
-## 7. Error, loading and empty states
+## 7. Trust boundaries
+
+Two places take input the app did not produce, and both are treated as hostile
+by construction rather than by care:
+
+**External food data** (`integrations/foodProviders`) is validated on the way in
+— energy required, macros nullable, barcode check digits verified locally before
+a request is made.
+
+**Model output** (`integrations/ai`) is parsed against a closed action schema
+before anything is rendered. The coach cannot write: it returns proposals, the
+user confirms, the app performs. The vocabulary contains no destructive verb at
+all, so prompt injection through a food name or a recipe title has nothing to
+reach for. Anything that fails validation is dropped rather than shown, because
+letting a user confirm an action means trusting the shape it arrived in.
+
+---
+
+## 8. Error, loading and empty states
 
 `LoadingState`, `ErrorState` and `EmptyState` are design-system components.
 Screens must not invent their own spinners or error text. Every query-backed
@@ -248,7 +292,7 @@ screen renders exactly one of: loading, error (with retry), empty, or content.
 
 ---
 
-## 8. Testing strategy
+## 9. Testing strategy
 
 | Layer | Tool | What is tested |
 |---|---|---|

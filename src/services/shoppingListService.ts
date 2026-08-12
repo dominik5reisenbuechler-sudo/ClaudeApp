@@ -17,6 +17,25 @@ import type {
  * servings) and persists the result.
  */
 
+/** Retail pack sizes per ingredient, for the packaging planner. */
+export async function fetchPackSizes(
+  ingredientIds: readonly string[],
+): Promise<Map<string, number[]>> {
+  if (ingredientIds.length === 0) return new Map();
+
+  const { data, error } = await getSupabase()
+    .from('ingredients')
+    .select('id, package_sizes')
+    .in('id', [...ingredientIds]);
+  if (error) throw new Error(error.message);
+
+  return new Map(
+    (data ?? [])
+      .filter((row) => row.package_sizes.length > 0)
+      .map((row) => [row.id, row.package_sizes.map(Number)]),
+  );
+}
+
 /**
  * Every ingredient a plan requires, already scaled by the servings each meal
  * was planned at.

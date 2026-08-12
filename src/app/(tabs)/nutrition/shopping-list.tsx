@@ -12,6 +12,7 @@ import {
   ProgressBar,
   Text,
 } from '@/components/ui';
+import { planPackaging } from '@/domain/nutrition/packaging';
 import {
   CATEGORY_LABELS,
   completionSummary,
@@ -22,6 +23,7 @@ import { NutritionSubNav } from '@/features/nutrition/NutritionSubNav';
 import {
   useGenerateShoppingList,
   useMealPlan,
+  usePackSizes,
   useShoppingList,
   useToggleShoppingItem,
   weekStartFor,
@@ -54,6 +56,12 @@ export default function ShoppingListScreen() {
     [items],
   );
   const groups = useMemo(() => groupByCategory(items.map(toLine)), [items]);
+
+  const ingredientIds = useMemo(
+    () => items.map((item) => item.ingredient_id).filter((id): id is string => id !== null),
+    [items],
+  );
+  const packSizes = usePackSizes(ingredientIds);
 
   const handleGenerate = async () => {
     if (!plan.data) return;
@@ -155,6 +163,11 @@ export default function ShoppingListScreen() {
                       <ShoppingRow
                         key={item.id}
                         item={item}
+                        packSizes={
+                          item.ingredient_id
+                            ? packSizes.data?.get(item.ingredient_id)
+                            : undefined
+                        }
                         onToggle={() =>
                           void toggleItem.mutateAsync({
                             itemId: item.id,
@@ -186,12 +199,21 @@ export default function ShoppingListScreen() {
 
 function ShoppingRow({
   item,
+  packSizes,
   onToggle,
 }: {
   item: ShoppingListItemRow;
+  packSizes: readonly number[] | undefined;
   onToggle: () => void;
 }) {
   const theme = useTheme();
+
+  // What to actually put in the trolley. Absent when the ingredient has no
+  // known pack sizes, which is most user-added lines — better to say nothing
+  // than to invent a pack size.
+  const packaging = packSizes
+    ? planPackaging(Number(item.quantity), item.unit, packSizes, { category: item.category })
+    : null;
 
   return (
     <Pressable
@@ -231,6 +253,11 @@ function ShoppingRow({
         {item.covered_by_pantry !== null ? (
           <Text variant="caption" tone="tertiary">
             {`${Number(item.covered_by_pantry)} ${item.unit} already in your pantry`}
+          </Text>
+        ) : null}
+        {packaging && !item.is_checked ? (
+          <Text variant="caption" tone="tertiary">
+            {packaging.note}
           </Text>
         ) : null}
       </View>

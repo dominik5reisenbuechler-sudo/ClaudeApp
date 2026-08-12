@@ -265,12 +265,16 @@ export function completionSummary(
 }
 
 /**
- * Suggest whole retail packs for a required amount (CLAUDE.md §25).
+ * Superseded by `planPackaging` (see `packaging.ts`).
  *
- * Deliberately simple: the smallest number of the largest sensible pack that
- * covers the requirement. Leftover is reported rather than optimised away —
- * using it up across meals is a phase-10 concern, and pretending to solve it
- * now would just produce a worse shopping list today.
+ * This picked the smallest number of the largest pack, which buys a kilo to
+ * cover 700 g and throws 300 g away where 500 + 250 leaves 50 g. Kept because
+ * it is the right answer when there is only one pack size, and because
+ * `planPackaging` falls back to exactly this shape when the search is not
+ * worth running.
+ *
+ * @deprecated Use `planPackaging` — it searches combinations and knows which
+ * leftovers keep.
  */
 export function suggestPackaging(
   requiredQuantity: number,

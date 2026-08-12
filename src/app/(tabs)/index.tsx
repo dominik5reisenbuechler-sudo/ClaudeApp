@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader } from '@/components/layout';
-import { Callout, ErrorState, LoadingState, Text } from '@/components/ui';
+import { Callout, Card, ErrorState, LoadingState, Text } from '@/components/ui';
 import { summarizeSteps } from '@/domain/activity/steps';
 import { totalsFor } from '@/domain/nutrition/dailyTotals';
 import { GOAL_LABELS } from '@/domain/nutrition/goalAdjustment';
@@ -150,6 +150,18 @@ export default function HomeScreen() {
           <WeightCard summary={weightSummary} />
           <StepsCard summary={stepsSummary} />
           <StreaksCard />
+
+          <Card tone="flat" onPress={() => router.push('/coach')}>
+            <View style={{ gap: theme.spacing.xs }}>
+              <Text variant="label" tone="tertiary">
+                Ask the coach
+              </Text>
+              <Text variant="caption" tone="secondary">
+                Questions about your own numbers — am I gaining too fast, is this lift ready for
+                more weight. It answers from your logs or says it cannot.
+              </Text>
+            </View>
+          </Card>
 
           <View style={{ marginTop: theme.spacing.sm }}>
             <Callout tone="info" title="Your targets will change">

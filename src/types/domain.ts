@@ -163,6 +163,10 @@ export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
 export const MEAL_PREP_PREFERENCES = ['none', 'some', 'heavy'] as const;
 export type MealPrepPreference = (typeof MEAL_PREP_PREFERENCES)[number];
 
+/** Where a logged row came from. `manual` outranks every synced source. */
+export const LOG_SOURCES = ['manual', 'healthkit', 'health_connect', 'smart_scale'] as const;
+export type LogSource = (typeof LOG_SOURCES)[number];
+
 export const TARGET_SOURCES = ['onboarding', 'recommendation', 'manual'] as const;
 export type TargetSource = (typeof TARGET_SOURCES)[number];
 

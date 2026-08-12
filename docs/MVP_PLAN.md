@@ -389,12 +389,66 @@ behaviour, and idempotency is enforced in three places (a deterministic
 
 ---
 
-## Phase 10 — Advanced ⬜
+## Phase 10 — Advanced 🚧
 
-- Apple HealthKit / Google Health Connect behind `HealthProvider`
-- AI coach over structured user data, with confirmation before any write
-- Smart-scale integrations
-- Package-size optimisation for shopping lists
+- 🚧 **Apple HealthKit / Google Health Connect behind `HealthProvider`.**
+  Interface, reconciliation rules, sync flow, consent gate and settings UI are
+  complete and tested. **The two native implementations are not written** — see
+  the deferral below, which is the honest version of why.
+- ✅ **AI coach over structured user data, with confirmation before any write.**
+  Context assembly and the action vocabulary are pure and tested
+  (`domain/coach/`), the key lives in an Edge Function
+  (`supabase/functions/coach/`), and the coach has no path to a write of its own.
+- ✅ **Smart-scale integration** — through the same path. Withings, Renpho and
+  Eufy all write into Apple Health or Health Connect, so `reconcileWeights`
+  handling a hardware reading (and recording it as `smart_scale` rather than a
+  phone entry) *is* the integration. A per-vendor OAuth client would be a second
+  way to receive the same number.
+- ✅ **Package-size optimisation for shopping lists** (`domain/nutrition/packaging.ts`),
+  replacing the deliberately-simple phase-5 version.
+
+**Three decisions worth recording.**
+
+*Leftover is not always waste.* Needing 700 g with 250 g / 500 g / 1 kg packs,
+the phase-5 answer bought a kilo and threw 300 g away where 500 + 250 leaves
+50 g. But 300 g of spare rice is stock and 300 g of spare chicken is a problem,
+so shelf stability — read from the ingredient's category — changes which
+combination wins. The search runs over quantities rather than combinations, so
+several pack sizes do not blow it up.
+
+*A manual entry always wins.* If someone typed 82.4 kg this morning, a scale
+that synced 82.1 kg does not overwrite it. A sync only fills gaps, produces no
+deletes and no updates, and reports what it left alone — "3 days kept your own
+entry" — rather than silently doing less than the user expected.
+
+*The coach's action vocabulary contains no destructive verb.* Not "delete
+requires confirmation" — there is no way to express a deletion, so no amount of
+clever prompting produces one. Anything that fails validation is dropped rather
+than rendered, because letting the user confirm an action means trusting the
+model's output shape, and the parse is the only place that trust can be checked.
+
+**Deferred, with reasons:**
+
+- **The HealthKit and Health Connect implementations themselves.** They are
+  native modules: they cannot run in Expo Go, and testing them means a custom
+  development client, a real device, a real health store and real permission
+  prompts. An implementation written without ever executing it once — never
+  granted a permission, never handed a real sample — would look finished and
+  fail on a user's phone rather than in a build. That is worse than the null
+  provider, which fails visibly and immediately. Everything around them is
+  done, so adding a platform is one file plus a line in the registry.
+- **Coach conversation history is not persisted.** It lives in component state
+  and is gone when the screen unmounts. Storing it means storing health
+  questions, which needs a retention policy, an export path and a deletion path
+  before it needs a table.
+- **`swap_exercise` and `add_meal_to_plan` navigate rather than write.** Those
+  screens own validation the coach cannot see — equipment availability, allergen
+  rules, plan structure — and performing the write from the coach would bypass
+  rules that exist for a reason.
+- **`set_calorie_target` from the coach does not recompute macros.** The weekly
+  check-in does, because that is a full target change the user reviewed. Here the
+  user agreed to an energy figure, and silently changing three other numbers is
+  more than they agreed to.
 
 ---
 
@@ -431,3 +485,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 7 | clean | clean | 483 tests / 27 files | 42 routes |
 | 8 | clean | clean | 611 tests / 33 files | 44 routes |
 | 9 | clean | clean | 681 tests / 37 files | 46 routes |
+| 10 | clean | clean | 767 tests / 41 files | 48 routes |
