@@ -49,6 +49,33 @@ export type FoodSource = (typeof FOOD_SOURCES)[number];
 export const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
+/** Supermarket aisles. Order matters for the shopping list — see §23. */
+export const INGREDIENT_CATEGORIES = [
+  'meat_fish',
+  'dairy',
+  'eggs',
+  'vegetables',
+  'fruit',
+  'carbs',
+  'frozen',
+  'canned',
+  'spices',
+  'other',
+] as const;
+export type IngredientCategory = (typeof INGREDIENT_CATEGORIES)[number];
+
+export const PLAN_MODES = [
+  'balanced',
+  'maximum_variety',
+  'meal_prep',
+  'budget',
+  'quick_easy',
+  'high_protein',
+  'cut_friendly',
+  'bulk',
+] as const;
+export type PlanMode = (typeof PLAN_MODES)[number];
+
 export const UNIT_SYSTEMS = ['metric', 'imperial'] as const;
 export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
 

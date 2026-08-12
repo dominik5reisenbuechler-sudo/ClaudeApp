@@ -162,17 +162,46 @@ diet type, allergens and dislikes, with a stated reason per suggestion.
 
 ---
 
-## Phase 5 — Meal planner ⬜
+## Phase 5 — Meal planner ✅
 
-- Week grid (Mon–Sun × 4 slots), add/remove/swap/copy meal, copy day, copy week
-- Auto-generation with the eight modes
-- Meal-prep mode: ingredient reuse across days
-- Shopping list generation with unit-normalised aggregation
-- Category grouping, checkboxes, `n / m completed`
-- Pantry subtraction
+- ✅ Schema (`0007`): meal plans, days, entries, pantry, shopping lists and items
+- ✅ Week view (Mon–Sun × 4 slots) with add, remove, copy day, copy week, clear
+- ✅ Auto-generation across all eight modes, deterministic and explainable
+- ✅ Meal-prep mode reuses ingredients and repeats meals on purpose
+- ✅ Shopping list with unit-normalised aggregation
+- ✅ Aisle grouping, checkboxes, `n / m completed`
+- ✅ Pantry subtraction, including `always_in_stock` staples
 
-**Done when:** 200 g + 180 g + 220 g chicken across three meals produces one
-`Chicken Breast — 600 g` line under Meat/Fish.
+**Decisions worth recording.**
+
+*Generation excludes disliked foods; browsing only ranks them down.* The
+difference is who is choosing. A user scrolling a list can skip the olives; a
+generated week puts them on the plan unasked. When nothing else fits, the plan
+uses them **and says so** rather than silently overriding the preference. A
+test pins both halves.
+
+*Incompatible units are never merged.* 2 pieces + 100 g of the same ingredient
+stays two lines. We do not know what one piece weighs, and a guessed conversion
+produces a list that is confidently wrong — worse than one that is slightly
+verbose. The same caution applies to the pantry: an unconvertible pantry entry
+is ignored rather than guessed at, because under-buying means a meal that
+cannot be cooked.
+
+*Regenerating the shopping list is explicit.* The list is stored, not derived
+live from the plan. Nobody wants their half-ticked list reset because the plan
+changed while they were in the shop.
+
+*Ingredient rounding happens once, at the end.* Recipe quantities are summed at
+full precision across the week and rounded on the finished line; rounding each
+of twenty-one meals first would compound the error.
+
+**Deferred:** drag-to-reorder (the spec says "when practical" — day cards with
+add/remove cover the need on a phone); swapping a meal is remove-then-add
+rather than a dedicated gesture; package-size suggestions are implemented and
+tested (`suggestPackaging`) but not yet surfaced in the UI.
+
+**Done:** 200 g + 180 g + 220 g of chicken across three meals produces one
+`Chicken breast — 600 g` line under Meat & Fish.
 
 ---
 
@@ -262,3 +291,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 2 | clean | clean | 211 tests / 13 files | 20 routes |
 | 3 | clean | clean | 276 tests / 17 files | 30 routes |
 | 4 | clean | clean | 324 tests / 19 files | 32 routes |
+| 5 | clean | clean | 371 tests / 21 files | 32 routes |

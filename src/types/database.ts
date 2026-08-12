@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0006.
+ * Database types for the tables created by migrations 0001–0007.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -18,10 +18,12 @@ import type {
   ExperienceLevel,
   FoodSource,
   GoalType,
+  IngredientCategory,
   IsoDate,
   MealPrepPreference,
   MealType,
   OccupationActivity,
+  PlanMode,
   Sex,
   TargetSource,
   TrainingLocation,
@@ -39,6 +41,8 @@ export type MeasurementSite =
   | 'neck'
   | 'shoulders';
 export type ConsentKind = 'terms' | 'privacy' | 'health_data' | 'analytics';
+
+export type { IngredientCategory, PlanMode };
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
@@ -264,18 +268,6 @@ export type FoodFavoriteRow = {
   created_at: string;
 }
 
-export type IngredientCategory =
-  | 'meat_fish'
-  | 'dairy'
-  | 'eggs'
-  | 'vegetables'
-  | 'fruit'
-  | 'carbs'
-  | 'frozen'
-  | 'canned'
-  | 'spices'
-  | 'other';
-
 export type IngredientRow = Timestamps & {
   id: string;
   slug: string;
@@ -340,6 +332,66 @@ export type UserRecipeFavoriteRow = {
   user_id: string;
   recipe_id: string;
   created_at: string;
+}
+
+export type MealPlanRow = Timestamps & {
+  id: string;
+  user_id: string;
+  /** Always a Monday — enforced by a check constraint. */
+  week_start_date: IsoDate;
+  name: string | null;
+  mode: PlanMode | null;
+  generated_at: string | null;
+  generation_params: Json;
+}
+
+export type MealPlanDayRow = {
+  id: string;
+  meal_plan_id: string;
+  day_index: number;
+  day_date: IsoDate;
+  created_at: string;
+}
+
+export type MealPlanEntryRow = Timestamps & {
+  id: string;
+  meal_plan_day_id: string;
+  meal_type: MealType;
+  recipe_id: string | null;
+  saved_meal_id: string | null;
+  servings: number;
+  sort_order: number;
+}
+
+export type PantryItemRow = Timestamps & {
+  id: string;
+  user_id: string;
+  ingredient_id: string;
+  quantity: number | null;
+  unit: string | null;
+  always_in_stock: boolean;
+}
+
+export type ShoppingListRow = Timestamps & {
+  id: string;
+  user_id: string;
+  meal_plan_id: string | null;
+  name: string | null;
+  generated_at: string;
+}
+
+export type ShoppingListItemRow = Timestamps & {
+  id: string;
+  shopping_list_id: string;
+  ingredient_id: string | null;
+  display_name: string;
+  category: IngredientCategory;
+  quantity: number;
+  unit: string;
+  covered_by_pantry: number | null;
+  is_checked: boolean;
+  is_manual: boolean;
+  sort_order: number;
 }
 
 /**
@@ -489,6 +541,40 @@ export type Database = {
         Insertable<UserRecipeFavoriteRow>,
         Updatable<UserRecipeFavoriteRow>
       >;
+      meal_plans: TableDefinition<
+        MealPlanRow,
+        Insertable<MealPlanRow, 'name' | 'mode' | 'generated_at' | 'generation_params'>,
+        Updatable<MealPlanRow>
+      >;
+      meal_plan_days: TableDefinition<
+        MealPlanDayRow,
+        Insertable<MealPlanDayRow>,
+        Updatable<MealPlanDayRow>
+      >;
+      meal_plan_entries: TableDefinition<
+        MealPlanEntryRow,
+        Insertable<MealPlanEntryRow, 'recipe_id' | 'saved_meal_id' | 'servings' | 'sort_order'>,
+        Updatable<MealPlanEntryRow>
+      >;
+      pantry_items: TableDefinition<
+        PantryItemRow,
+        Insertable<PantryItemRow, 'quantity' | 'unit' | 'always_in_stock'>,
+        Updatable<PantryItemRow>
+      >;
+      shopping_lists: TableDefinition<
+        ShoppingListRow,
+        Insertable<ShoppingListRow, 'meal_plan_id' | 'name' | 'generated_at'>,
+        Updatable<ShoppingListRow>
+      >;
+      shopping_list_items: TableDefinition<
+        ShoppingListItemRow,
+        Insertable<
+          ShoppingListItemRow,
+          | 'ingredient_id' | 'category' | 'covered_by_pantry'
+          | 'is_checked' | 'is_manual' | 'sort_order'
+        >,
+        Updatable<ShoppingListItemRow>
+      >;
       progress_photos: TableDefinition<
         ProgressPhotoRow,
         Insertable<ProgressPhotoRow, 'taken_on' | 'pose'>,
@@ -521,6 +607,7 @@ export type Database = {
       food_source: FoodSource;
       difficulty: Difficulty;
       ingredient_category: IngredientCategory;
+      meal_plan_mode: PlanMode;
     };
     CompositeTypes: Record<string, never>;
   };

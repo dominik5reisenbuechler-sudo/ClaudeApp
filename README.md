@@ -5,10 +5,11 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–4 complete** — foundation, onboarding, the dashboard with
-weight and step logging, nutrition tracking with barcode scanning, and the
-recipe system with macro-fit recommendations. See
-[`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
+**Status: Phases 0–5 complete** — foundation, onboarding, the dashboard with
+weight and step logging, nutrition tracking with barcode scanning, the recipe
+system with macro-fit recommendations, and the weekly meal planner with an
+aggregated shopping list. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what
+ships when.
 
 ---
 
@@ -98,8 +99,9 @@ BMR and TDEE estimation, macro allocation, safety floors, weight moving
 averages and trend, rate-vs-goal assessment, step summarisation, pending-action
 derivation, food scaling and daily aggregation, food-data plausibility checks,
 barcode check digits, the Open Food Facts mapping, recipe portion scaling,
-macro-fit recipe ranking, unit conversion and shopping-list aggregation, date
-and age arithmetic, and the onboarding-to-domain mapping.
+macro-fit recipe ranking, meal-plan generation across all eight modes, unit
+conversion and shopping-list aggregation, date and age arithmetic, and the
+onboarding-to-domain mapping.
 
 ```bash
 npm test

@@ -234,17 +234,18 @@ Beyond primary keys and the uniqueness constraints above:
 | `0004_body_and_activity_logs.sql` | weight, measurements, steps, activity, recovery, photos |
 | `0005_nutrition.sql` | foods, food entries, saved meals, favourites, `search_foods()` |
 | `0006_recipes.sql` | ingredients, recipes, recipe ingredients, instructions, favourites |
-| `0007_meal_planning.sql` | meal plans, shopping lists, pantry |
+| `0007_meal_planning.sql` | meal plans, days, entries, pantry, shopping lists and items |
 | `0008_training.sql` | muscles, exercises, plans, sessions, sets, PRs |
 | `0009_adaptive_and_gamification.sql` | check-ins, recommendations, evidence rules, XP, streaks, achievements |
 | `0010_gdpr.sql` | export/deletion request tables |
 
 Migrations land with the phase that uses them — a table with no reader is a
 schema guess, not a schema. `0001`–`0004` shipped with phases 0–2;
-`0005` with phase 3; `0006` with phase 4. `ingredients` moved out of `0005` and
-into `0006`, since nothing read it until recipes existed.
+`0005` with phase 3; `0006` with phase 4; `0007` with phase 5. `ingredients`
+moved out of `0005` and into `0006`, since nothing read it until recipes
+existed.
 
-**Applied so far:** `0001`–`0006`.
+**Applied so far:** `0001`–`0007`.
 
 ## Seeds
 
