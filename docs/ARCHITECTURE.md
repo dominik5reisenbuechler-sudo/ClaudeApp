@@ -124,6 +124,7 @@ src/
     auth/
     dashboard/
     checkin/                  scale fields, recommendation + TDEE cards
+    gamification/             level card
   domain/
     nutrition/                energy, macros, weightTrend, tdeeEstimator,
                               goalAdjustment
@@ -132,7 +133,7 @@ src/
     progress/                 trends, PRs
     recommendations/          recovery scoring, calorie + training engines,
                               weekly assembly, explanations
-    gamification/             xp, streaks, achievements
+    gamification/             xp ledger, streaks, achievement catalogue
   hooks/
   services/                   supabase repositories
   integrations/

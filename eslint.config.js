@@ -32,7 +32,11 @@ module.exports = defineConfig([
   {
     // ADR-002: the domain layer is pure. It must not reach into React, the
     // platform, the database, or any I/O. This rule is the enforcement.
+    //
+    // Tests are excluded: `*.test.ts` never ships, and one of them deliberately
+    // reads a seed file off disk to assert it matches the catalogue it mirrors.
     files: ['src/domain/**/*.ts'],
+    ignores: ['src/domain/**/*.test.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -56,6 +60,9 @@ module.exports = defineConfig([
                 '@/lib/*',
                 '@/integrations/*',
                 '@/theme/*',
+                'node:*',
+                'fs',
+                'path',
               ],
               message:
                 'src/domain must stay pure (ARCHITECTURE.md ADR-002). Only src/domain, src/types, src/utils and zod may be imported.',

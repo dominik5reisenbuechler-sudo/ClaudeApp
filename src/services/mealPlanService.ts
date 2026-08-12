@@ -30,6 +30,27 @@ export interface FullMealPlan extends MealPlanRow {
   days: MealPlanDayWithEntries[];
 }
 
+/**
+ * Week starts that have a plan, newest first.
+ *
+ * Just the dates — the meal-planning streak needs to know *whether* a week was
+ * planned, not what was in it, and pulling every entry to answer that would be
+ * a large query for a small number.
+ */
+export async function fetchPlannedWeekStarts(
+  userId: string,
+  from: IsoDate,
+): Promise<IsoDate[]> {
+  const { data, error } = await getSupabase()
+    .from('meal_plans')
+    .select('week_start_date')
+    .eq('user_id', userId)
+    .gte('week_start_date', from)
+    .order('week_start_date', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => row.week_start_date);
+}
+
 export async function fetchMealPlan(
   userId: string,
   weekStart: IsoDate,

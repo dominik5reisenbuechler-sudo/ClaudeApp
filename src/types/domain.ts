@@ -111,6 +111,40 @@ export type RecommendationStatus = (typeof RECOMMENDATION_STATUSES)[number];
 export const EVIDENCE_LEVELS = ['strong', 'moderate', 'limited', 'mechanistic'] as const;
 export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
 
+/**
+ * What earns XP. `achievement` carries achievement rewards through the same
+ * ledger, so total XP stays a single sum with no second source of truth.
+ */
+export const XP_KINDS = [
+  'workout_completed',
+  'calorie_target',
+  'protein_target',
+  'step_goal',
+  'weight_logged',
+  'meal_plan',
+  'checkin_completed',
+  'achievement',
+] as const;
+export type XpKind = (typeof XP_KINDS)[number];
+
+export const STREAK_KINDS = [
+  'training',
+  'nutrition',
+  'protein',
+  'steps',
+  'meal_planning',
+] as const;
+export type StreakKind = (typeof STREAK_KINDS)[number];
+
+export const ACHIEVEMENT_CATEGORIES = [
+  'training',
+  'nutrition',
+  'consistency',
+  'body',
+  'milestone',
+] as const;
+export type AchievementCategory = (typeof ACHIEVEMENT_CATEGORIES)[number];
+
 export const PLAN_MODES = [
   'balanced',
   'maximum_variety',

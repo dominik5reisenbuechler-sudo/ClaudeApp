@@ -5,14 +5,15 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–8 complete** — foundation, onboarding, the dashboard,
+**Status: Phases 0–9 complete** — foundation, onboarding, the dashboard,
 nutrition tracking with barcode scanning, the recipe system, the weekly meal
 planner with an aggregated shopping list, the training side (programme
 generation, workout logger, progression engine), progress analytics with charts
 and personal records, and the adaptive engine: measured expenditure, the weekly
 check-in, and confidence-gated calorie, volume and deload recommendations that
-the user accepts or rejects. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what
-ships when.
+the user accepts or rejects, and gamification: an append-only XP ledger,
+achievements, and five streaks whose training streak excuses scheduled rest
+days. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
 
 ---
 
@@ -54,8 +55,8 @@ project. They are ordinary SQL and are idempotent in ordering, not in content �
 run them once, in sequence.
 
 Then load `supabase/seed/` for the ingredient and recipe catalogue, the exercise
-model, and the evidence rules the recommendation engine cites. Seeds run as the
-service role and are safe to re-run.
+model, the evidence rules the recommendation engine cites, and the achievement
+catalogue. Seeds run as the service role and are safe to re-run.
 
 RLS is enabled on every table in the same migration that creates it. A table
 with RLS on and no policy denies everything, which is the intended default.

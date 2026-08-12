@@ -166,9 +166,24 @@ new target; rejecting it changes nothing. Neither is ever deleted.
 ### 4.9 Gamification
 
 XP for completed workouts (+100), calorie target (+50), protein target (+50),
-steps (+30), weight logged (+10), weekly meal plan (+30). Achievements for
-milestones. Separate streaks for Training, Nutrition, Protein, Steps and Meal
-Planning — the **training streak respects scheduled rest days**.
+steps (+30), weight logged (+10), weekly meal plan (+30), weekly check-in
+(+60). Achievements for milestones. Separate streaks for Training, Nutrition,
+Protein, Steps and Meal Planning — the **training streak respects scheduled
+rest days**.
+
+Three rules keep this from working against the product:
+
+- **A scheduled rest day never breaks a streak.** A streak that resets because
+  someone took the rest day their programme prescribed rewards junk volume, and
+  is the most common way a fitness app teaches people to overtrain.
+- **Nothing unlocks on a direction of travel on the scale** — not weight lost,
+  not a body-fat figure, not a goal weight. Rewarding the number itself is the
+  mechanic that makes tracking apps harmful for the people most at risk from
+  them. The body-related achievements reward *measuring consistently*.
+- **Nothing in the adaptive engine reads XP.** Points are encouragement; they
+  are never evidence. Paying for a self-reported calorie target rewards the
+  number rather than the honesty, so the points are kept away from anything
+  that decides what the user eats or trains.
 
 ### 4.10 AI coach (later phase)
 

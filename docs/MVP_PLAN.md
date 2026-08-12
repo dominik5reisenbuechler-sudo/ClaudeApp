@@ -72,7 +72,7 @@ that need later phases, and the plumbing is already in place:
 |---|---|---|
 | Calories/protein consumed | Phase 3 food logging | `NutritionTargetsCard` takes `consumed`; `null` renders the targets as a list rather than bars pinned at zero |
 | Today's workout | Phase 6 planner | `buildPendingActions` takes a nullable `workout`; `null` emits no action |
-| Streaks | Phase 9 | Not started — belongs with the XP and achievement work |
+| Streaks | Phase 9 | ✅ Shipped in phase 9 — a training streak cannot excuse rest days before training plans exist |
 
 In `buildPendingActions`, `null` means "this capability does not exist", not
 "the user has done nothing". Telling someone to log food before food logging
@@ -336,13 +336,56 @@ a substantial reason and at least one evidence rule.
 
 ---
 
-## Phase 9 — Gamification ⬜
+## Phase 9 — Gamification ✅
 
-- XP ledger and totals
-- Achievements + unlock detection
-- Five independent streaks; training streak respects scheduled rest days
-- Streak display on the dashboard (deferred here from phase 2, since a training
-  streak cannot respect rest days before training plans exist)
+- ✅ XP ledger and totals (`domain/gamification/xp.ts`, migration 0010). Append
+  only; the total is a sum, never a stored counter. Awards are *derived* from a
+  day's logs by `xpForDay`, so re-running the pass produces the same list and
+  the unique index turns a repeat into a no-op.
+- ✅ Achievements and unlock detection (`domain/gamification/achievements.ts`,
+  seed 0004). Every achievement thresholds on a metric the app already computes,
+  so progress is always showable; `detectUnlocks` is idempotent by construction
+  and awards every tier crossed at once.
+- ✅ Five independent streaks (`domain/gamification/streaks.ts`). **A scheduled
+  rest day never breaks the training streak** — rest days are `excused`, and
+  neither extend nor end it. **Today is pending, not missed**: an unqualified
+  today leaves the streak standing and is reported separately, because a streak
+  that reads 0 at breakfast and 14 at dinner is measuring the clock.
+- ✅ Streak display on the dashboard, plus an achievements screen under Progress
+  with locked entries shown as progress bars rather than hidden.
+
+**Done when:** the training streak survives a rest day and XP cannot be
+double-awarded. — met; `streaks.test.ts` pins the rest-day and pending-today
+behaviour, and idempotency is enforced in three places (a deterministic
+`xpForDay`, `ignoreDuplicates` on the write, and a unique index behind both).
+
+**Design notes worth keeping:**
+
+- **There is no `streaks` table**, though `DATABASE_SCHEMA.md` originally listed
+  one. Streaks are a pure function of logs the client has already fetched, and a
+  cache would be a second source of truth able to disagree with the logs it
+  summarises. XP and unlocks *are* stored, because they record moments rather
+  than summaries: deleting a food entry from March must not take back the points
+  it earned at the time.
+- **Nothing unlocks on a direction of travel on the scale.** No achievement for
+  weight lost, for a body-fat figure, or for reaching a goal weight — that is
+  the mechanic that makes tracking apps harmful for the people most at risk from
+  them (CLAUDE.md §55). The `body` category rewards *measuring*. A test asserts
+  it, so the rule survives someone adding achievements later.
+- **Nothing in the adaptive engine reads XP.** Points are encouragement; they
+  are never evidence. Paying for hitting a self-reported calorie target rewards
+  the number rather than the honesty, which is a tension that cannot be designed
+  away — only kept away from anything that matters.
+
+**Deferred, with reasons:**
+
+- **Push notifications for streaks at risk.** The obvious next feature and the
+  easiest one to get wrong: a notification that says "your streak ends in three
+  hours" is pressure, not encouragement. It needs a design conversation about
+  tone and opt-in before it needs code.
+- **`recipes_cooked` counts logged entries that came from a recipe**, which is a
+  proxy: logging a recipe is not proof of cooking it. Accurate enough for an
+  achievement, and named honestly here rather than dressed up.
 
 ---
 
@@ -387,3 +430,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 6 | clean | clean | 439 tests / 24 files | 38 routes |
 | 7 | clean | clean | 483 tests / 27 files | 42 routes |
 | 8 | clean | clean | 611 tests / 33 files | 44 routes |
+| 9 | clean | clean | 681 tests / 37 files | 46 routes |

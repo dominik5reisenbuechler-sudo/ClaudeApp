@@ -4,13 +4,14 @@ import { useRouter } from 'expo-router';
 import { Chip } from '@/components/ui';
 import { useTheme } from '@/theme/ThemeProvider';
 
-export type ProgressSection = 'body' | 'strength' | 'training' | 'checkin';
+export type ProgressSection = 'body' | 'strength' | 'training' | 'checkin' | 'achievements';
 
 const SECTIONS: readonly { id: ProgressSection; label: string; href: string }[] = [
   { id: 'body', label: 'Body', href: '/progress' },
   { id: 'strength', label: 'Strength', href: '/progress/strength' },
   { id: 'training', label: 'Training', href: '/progress/training' },
   { id: 'checkin', label: 'Check-in', href: '/progress/checkin' },
+  { id: 'achievements', label: 'Achievements', href: '/progress/achievements' },
 ];
 
 export function ProgressSubNav({ active }: { active: ProgressSection }) {

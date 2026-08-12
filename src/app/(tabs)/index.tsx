@@ -11,9 +11,11 @@ import { buildPendingActions } from '@/domain/progress/pendingActions';
 import { summarizeWeight } from '@/domain/progress/weightSummary';
 import { CheckinPromptCard } from '@/features/dashboard/CheckinPromptCard';
 import { NutritionTargetsCard } from '@/features/dashboard/NutritionTargetsCard';
+import { StreaksCard } from '@/features/dashboard/StreaksCard';
 import { PendingActionsCard } from '@/features/dashboard/PendingActionsCard';
 import { StepsCard } from '@/features/dashboard/StepsCard';
 import { WeightCard } from '@/features/dashboard/WeightCard';
+import { useAwardPass } from '@/hooks/useGamification';
 import { useStepLogs, useWeightLogs } from '@/hooks/useLogs';
 import { toLoggedEntries, useFoodEntries } from '@/hooks/useNutrition';
 import { useActiveGoal, useActiveTarget, useProfile } from '@/hooks/useProfile';
@@ -40,6 +42,10 @@ export default function HomeScreen() {
   const weights = useWeightLogs(undefined, today);
   const steps = useStepLogs(undefined, today);
   const foodEntries = useFoodEntries(today);
+
+  // Awards XP and records achievements for anything logged since the last
+  // visit. Idempotent, so mounting the dashboard twice changes nothing.
+  useAwardPass();
 
   const isLoading =
     profile.isLoading ||
@@ -143,6 +149,7 @@ export default function HomeScreen() {
           />
           <WeightCard summary={weightSummary} />
           <StepsCard summary={stepsSummary} />
+          <StreaksCard />
 
           <View style={{ marginTop: theme.spacing.sm }}>
             <Callout tone="info" title="Your targets will change">

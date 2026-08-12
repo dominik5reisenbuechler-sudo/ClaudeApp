@@ -51,7 +51,10 @@ in filename order. Seeds live in `supabase/seed/`.
 | `muscle_role` | `primary`, `secondary`, `stabilizer` |
 | `set_type` | `working`, `warmup`, `backoff`, `drop`, `myo_rep`, `amrap` |
 | `recommendation_status` | `pending`, `accepted`, `rejected`, `expired` |
-| `streak_kind` | `training`, `nutrition`, `protein`, `steps`, `meal_planning` |
+| `streak_kind` | `training`, `nutrition`, `protein`, `steps`, `meal_planning` — declared for the client vocabulary; no table uses it, since streaks are derived |
+| `xp_kind` | `workout_completed`, `calorie_target`, `protein_target`, `step_goal`, `weight_logged`, `meal_plan`, `checkin_completed`, `achievement` |
+| `achievement_category` | `training`, `nutrition`, `consistency`, `body`, `milestone` |
+| `recommendation_type` | `calorie_adjustment`, `macro_adjustment`, `volume_adjustment`, `deload`, `exercise_progression`, `adherence`, `no_change` |
 | `difficulty` | `easy`, `medium`, `hard` |
 | `evidence_level` | `strong`, `moderate`, `limited`, `mechanistic` |
 
@@ -199,12 +202,18 @@ overwritten, so "why did my target change?" is always answerable.
   `publication_year`, `last_reviewed_at`, `version`, `is_active`.
   Unique on `(rule_key, version)`; exactly one active row per `rule_key`.
 - **`achievements`** — reference: `id`, `name`, `description`, `icon`,
-  `category`, `threshold`, `xp_reward`.
-- **`user_achievements`** — `(user_id, achievement_id, unlocked_at, progress)`.
-- **`xp_events`** — append-only ledger: `user_id`, `kind`, `xp`, `earned_on`,
-  `context jsonb`. Total XP is a sum, never a mutable counter that can drift.
-- **`streaks`** — `user_id`, `kind streak_kind`, `current_length`,
-  `longest_length`, `last_qualifying_date`. A cache over the logs; rebuildable.
+  `category achievement_category`, `metric`, `threshold`, `xp_reward`,
+  `sort_order`. Seeded from the TypeScript catalogue, which is the source of
+  truth; a test asserts the two agree.
+- **`user_achievements`** — `(user_id, achievement_id, unlocked_on)`. A record
+  of a moment, never recomputed: an achievement must not un-unlock because an
+  old log was deleted. Insert and select only.
+- **`xp_events`** — append-only ledger: `user_id`, `kind xp_kind`, `xp`,
+  `earned_on`, `context jsonb`, `dedupe_key`. Total XP is a sum, never a mutable
+  counter that can drift. Unique on `(user_id, kind, earned_on, dedupe_key)`,
+  which is what makes the award pass safe to run on every app open. Insert and
+  select policies only — an append-only table the client can edit is not
+  append-only.
 
 ### Compliance
 
@@ -241,20 +250,20 @@ Beyond primary keys and the uniqueness constraints above:
 | `0007_meal_planning.sql` | meal plans, days, entries, pantry, shopping lists and items |
 | `0008_training.sql` | muscles, exercises, fractional credits, alternatives, plans, sessions, sets, PRs |
 | `0009_adaptive_engine.sql` | check-ins, recommendations, evidence rules |
-| `0010_gamification.sql` | XP, streaks, achievements |
+| `0010_gamification.sql` | XP ledger, achievements, unlocks |
 | `0011_gdpr.sql` | export/deletion request tables |
 
 Migrations land with the phase that uses them — a table with no reader is a
 schema guess, not a schema. `0001`–`0004` shipped with phases 0–2;
 `0005` with phase 3; `0006` with phase 4; `0007` with phase 5; `0008` with phase 6;
-`0009` with phase 8. Gamification split out of `0009` into its own migration,
+`0009` with phase 8; `0010` with phase 9. Gamification split out of `0009` into its own migration,
 because the adaptive engine shipped without it and a migration carrying tables
 nothing reads is exactly the schema guess this ordering exists to avoid.
 `ingredients`
 moved out of `0005` and into `0006`, since nothing read it until recipes
 existed.
 
-**Applied so far:** `0001`–`0009`.
+**Applied so far:** `0001`–`0010`.
 
 ## Seeds
 
@@ -284,3 +293,15 @@ a pinned `search_path`.
 - 7-day average weight (derived; a stored average goes stale the moment a
   backdated weigh-in is added).
 - Total XP as a column (derived from `xp_events`).
+- **Streaks.** The original plan had a `streaks` table described as "a cache over
+  the logs; rebuildable". It was dropped when the time came to build it: streaks
+  are a pure function of logs the client has already fetched for other screens,
+  so the table would buy nothing and cost a second source of truth able to
+  disagree with the logs it summarises. `streak_kind` survives as a client-side
+  vocabulary. It becomes worth revisiting if streaks are ever needed
+  server-side — a push notification or a leaderboard — and not before.
+
+  XP and achievement unlocks are the deliberate exceptions. They are not
+  summaries of current state but records of moments: deleting a food entry from
+  March must not take back the points it earned, and an achievement must not
+  un-unlock.

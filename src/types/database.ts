@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0009.
+ * Database types for the tables created by migrations 0001–0010.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -12,6 +12,7 @@
  */
 
 import type {
+  AchievementCategory,
   ActivityLevel,
   DietType,
   Difficulty,
@@ -34,6 +35,8 @@ import type {
   RecommendationType,
   SetType,
   Sex,
+  StreakKind,
+  XpKind,
   TargetSource,
   TrainingLocation,
   UnitSystem,
@@ -563,6 +566,41 @@ export type EvidenceRuleRow = {
   created_at: string;
 }
 
+// --- 0010 gamification -----------------------------------------------------
+
+export type XpEventRow = {
+  id: string;
+  user_id: string;
+  kind: XpKind;
+  xp: number;
+  earned_on: IsoDate;
+  context: Json;
+  /** Distinguishes several awards of the same kind on the same day. */
+  dedupe_key: string;
+  created_at: string;
+}
+
+export type AchievementRow = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  /** Mirrors `AchievementMetric` in the domain catalogue. */
+  metric: string;
+  threshold: number;
+  xp_reward: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export type UserAchievementRow = {
+  user_id: string;
+  achievement_id: string;
+  unlocked_on: IsoDate;
+  created_at: string;
+}
+
 export type ShoppingListItemRow = Timestamps & {
   id: string;
   shopping_list_id: string;
@@ -845,6 +883,21 @@ export type Database = {
         Insertable<EvidenceRuleRow, keyof EvidenceRuleRow>,
         Updatable<EvidenceRuleRow>
       >;
+      xp_events: TableDefinition<
+        XpEventRow,
+        Insertable<XpEventRow, 'context' | 'dedupe_key'>,
+        Updatable<XpEventRow>
+      >;
+      achievements: TableDefinition<
+        AchievementRow,
+        Insertable<AchievementRow, 'xp_reward' | 'sort_order'> & { id: string },
+        Updatable<AchievementRow>
+      >;
+      user_achievements: TableDefinition<
+        UserAchievementRow,
+        Insertable<UserAchievementRow, 'unlocked_on'>,
+        Updatable<UserAchievementRow>
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -881,6 +934,9 @@ export type Database = {
       recommendation_type: RecommendationType;
       recommendation_status: RecommendationStatus;
       evidence_level: EvidenceLevel;
+      xp_kind: XpKind;
+      streak_kind: StreakKind;
+      achievement_category: AchievementCategory;
     };
     CompositeTypes: Record<string, never>;
   };
