@@ -64,6 +64,32 @@ export const INGREDIENT_CATEGORIES = [
 ] as const;
 export type IngredientCategory = (typeof INGREDIENT_CATEGORIES)[number];
 
+export const MOVEMENT_PATTERNS = [
+  'horizontal_push',
+  'vertical_push',
+  'horizontal_pull',
+  'vertical_pull',
+  'squat',
+  'hinge',
+  'lunge',
+  'carry',
+  'isolation',
+  'core',
+] as const;
+export type MovementPattern = (typeof MOVEMENT_PATTERNS)[number];
+
+export const PLAN_STRUCTURES = ['full_body', 'upper_lower', 'push_pull_legs', 'hybrid'] as const;
+export type PlanStructure = (typeof PLAN_STRUCTURES)[number];
+
+export const SET_TYPES = ['working', 'warmup', 'backoff', 'drop', 'myo_rep', 'amrap'] as const;
+export type SetType = (typeof SET_TYPES)[number];
+
+export const MUSCLE_ROLES = ['primary', 'secondary', 'stabilizer'] as const;
+export type MuscleRole = (typeof MUSCLE_ROLES)[number];
+
+export const PR_KINDS = ['estimated_1rm', 'weight_for_reps', 'session_volume'] as const;
+export type PrKind = (typeof PR_KINDS)[number];
+
 export const PLAN_MODES = [
   'balanced',
   'maximum_variety',

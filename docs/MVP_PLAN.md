@@ -205,17 +205,45 @@ tested (`suggestPackaging`) but not yet surfaced in the UI.
 
 ---
 
-## Phase 6 — Training ⬜
+## Phase 6 — Training ✅
 
-- Muscle + exercise reference data, `exercise_muscles` fractional credits
-- Workout plan generator (2–6 days, split selection per `SCIENTIFIC_RULES.md`
-  §4.8)
-- Workout logger: previous performance, target reps/RIR, set entry
-- Rest timer
-- Double-progression engine with its blocking conditions
-- Exercise substitution
+- ✅ Schema (`0008`) and seed: 18 muscles, 42 exercises, fractional set credits,
+  alternatives
+- ✅ Plan generator for 2–6 days, split selection per `SCIENTIFIC_RULES.md` §4.8
+- ✅ Workout logger with previous performance, target reps/RIR, set entry
+- ✅ Rest timer
+- ✅ Double-progression engine with all four blocking conditions
+- ✅ Exercise substitution (alternatives seeded and surfaced)
+- ✅ Weekly fractional volume per muscle, on the plan screen
 
-**Done when:** a logged week produces correct fractional weekly set counts per
+**Decisions worth recording.**
+
+*Fractional credits are data.* A bench press credits chest 1.0, triceps 0.5 and
+front delts 0.5 — stored in `exercise_muscles`, not hard-coded. Revising them
+is an `UPDATE`, not a release. Warm-ups never count: including them would
+inflate every number and make the volume guidance meaningless.
+
+*The interesting half of progression is the refusal.* Pain, technique
+breakdown, a badly undershot RIR, and unstable performance each block a load
+increase, in that priority order, each with its own explanation. A one-off RIR
+of 1 against a target of 2 is **not** a block — self-reported RIR is imprecise,
+and treating noise as signal would stall everyone permanently.
+
+*Load increments are per exercise.* A leg press moves in 5 kg jumps, a lateral
+raise in 1 kg. A single global step is how a progression engine starts
+recommending impossible increases.
+
+*The volume ceiling is the honest part.* Priorities add sets, but 20/week caps
+it: "everything is a priority" is the same as no priority, and recovery is
+finite.
+
+**Deferred:** autoregulation (§36) and the deload engine (§37) need recovery
+data across weeks and belong with the adaptive engine in phase 8; session RPE
+is already collected for them. Personal records have a table and an
+`estimatedOneRepMax` function but no detection job yet — that lands with the
+analytics in phase 7.
+
+**Done:** a logged week produces correct fractional weekly set counts per
 muscle, and progression is withheld under each documented blocking condition.
 
 ---
@@ -292,3 +320,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 3 | clean | clean | 276 tests / 17 files | 30 routes |
 | 4 | clean | clean | 324 tests / 19 files | 32 routes |
 | 5 | clean | clean | 371 tests / 21 files | 32 routes |
+| 6 | clean | clean | 439 tests / 24 files | 38 routes |

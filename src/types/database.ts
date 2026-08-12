@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0007.
+ * Database types for the tables created by migrations 0001–0008.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -22,8 +22,14 @@ import type {
   IsoDate,
   MealPrepPreference,
   MealType,
+  MovementPattern,
+  MuscleId,
+  MuscleRole,
   OccupationActivity,
   PlanMode,
+  PlanStructure,
+  PrKind,
+  SetType,
   Sex,
   TargetSource,
   TrainingLocation,
@@ -380,6 +386,125 @@ export type ShoppingListRow = Timestamps & {
   generated_at: string;
 }
 
+export type MuscleRow = {
+  id: MuscleId;
+  name: string;
+  region: string;
+  default_weekly_sets_min: number;
+  default_weekly_sets_max: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export type ExerciseRow = Timestamps & {
+  id: string;
+  name: string;
+  equipment: string;
+  movement_pattern: MovementPattern;
+  difficulty: Difficulty;
+  rep_range_min: number;
+  rep_range_max: number;
+  load_increment_kg: number;
+  default_rest_seconds: number;
+  instructions: string[];
+  common_mistakes: string[];
+  rom_notes: string | null;
+  fatigue_rating: number | null;
+  stability_rating: number | null;
+  video_url: string | null;
+  is_public: boolean;
+  created_by: string | null;
+}
+
+/** The fractional set model — data, not a constant in code (CLAUDE.md §31). */
+export type ExerciseMuscleRow = {
+  exercise_id: string;
+  muscle_id: MuscleId;
+  role: MuscleRole;
+  set_credit: number;
+}
+
+export type ExerciseAlternativeRow = {
+  exercise_id: string;
+  alternative_id: string;
+  similarity: number;
+}
+
+export type WorkoutPlanRow = Timestamps & {
+  id: string;
+  user_id: string;
+  name: string;
+  days_per_week: number;
+  structure: PlanStructure;
+  generated_by: string;
+  generation_params: Json;
+  started_on: IsoDate;
+  ended_on: IsoDate | null;
+}
+
+export type WorkoutDayRow = {
+  id: string;
+  workout_plan_id: string;
+  day_index: number;
+  name: string;
+  target_muscles: string[];
+  created_at: string;
+}
+
+export type WorkoutExerciseRow = Timestamps & {
+  id: string;
+  workout_day_id: string;
+  exercise_id: string;
+  sort_order: number;
+  target_sets: number;
+  target_rep_min: number;
+  target_rep_max: number;
+  target_rir: number;
+  rest_seconds: number;
+  note: string | null;
+}
+
+export type WorkoutSessionRow = Timestamps & {
+  id: string;
+  user_id: string;
+  workout_day_id: string | null;
+  name: string | null;
+  started_at: string;
+  completed_at: string | null;
+  session_rpe: number | null;
+  notes: string | null;
+}
+
+export type ExerciseSetRow = Timestamps & {
+  id: string;
+  workout_session_id: string;
+  exercise_id: string;
+  set_index: number;
+  weight_kg: number | null;
+  reps: number | null;
+  rir: number | null;
+  rpe: number | null;
+  set_type: SetType;
+  is_completed: boolean;
+  technique_breakdown: boolean;
+  pain_reported: boolean;
+  note: string | null;
+  performed_at: string;
+}
+
+export type PersonalRecordRow = {
+  id: string;
+  user_id: string;
+  exercise_id: string;
+  kind: PrKind;
+  value: number;
+  reps: number | null;
+  weight_kg: number | null;
+  achieved_on: IsoDate;
+  exercise_set_id: string | null;
+  created_at: string;
+}
+
 export type ShoppingListItemRow = Timestamps & {
   id: string;
   shopping_list_id: string;
@@ -566,6 +691,64 @@ export type Database = {
         Insertable<ShoppingListRow, 'meal_plan_id' | 'name' | 'generated_at'>,
         Updatable<ShoppingListRow>
       >;
+      muscles: TableDefinition<MuscleRow, MuscleRow, Updatable<MuscleRow>>;
+      exercises: TableDefinition<
+        ExerciseRow,
+        Insertable<
+          ExerciseRow,
+          | 'difficulty' | 'rep_range_min' | 'rep_range_max' | 'load_increment_kg'
+          | 'default_rest_seconds' | 'instructions' | 'common_mistakes' | 'rom_notes'
+          | 'fatigue_rating' | 'stability_rating' | 'video_url' | 'is_public' | 'created_by'
+        > & { id: string },
+        Updatable<ExerciseRow>
+      >;
+      exercise_muscles: TableDefinition<
+        ExerciseMuscleRow,
+        ExerciseMuscleRow,
+        Updatable<ExerciseMuscleRow>
+      >;
+      exercise_alternatives: TableDefinition<
+        ExerciseAlternativeRow,
+        ExerciseAlternativeRow,
+        Updatable<ExerciseAlternativeRow>
+      >;
+      workout_plans: TableDefinition<
+        WorkoutPlanRow,
+        Insertable<WorkoutPlanRow, 'generated_by' | 'generation_params' | 'started_on' | 'ended_on'>,
+        Updatable<WorkoutPlanRow>
+      >;
+      workout_days: TableDefinition<
+        WorkoutDayRow,
+        Insertable<WorkoutDayRow, 'target_muscles'>,
+        Updatable<WorkoutDayRow>
+      >;
+      workout_exercises: TableDefinition<
+        WorkoutExerciseRow,
+        Insertable<WorkoutExerciseRow, 'sort_order' | 'target_rir' | 'rest_seconds' | 'note'>,
+        Updatable<WorkoutExerciseRow>
+      >;
+      workout_sessions: TableDefinition<
+        WorkoutSessionRow,
+        Insertable<
+          WorkoutSessionRow,
+          'workout_day_id' | 'name' | 'started_at' | 'completed_at' | 'session_rpe' | 'notes'
+        >,
+        Updatable<WorkoutSessionRow>
+      >;
+      exercise_sets: TableDefinition<
+        ExerciseSetRow,
+        Insertable<
+          ExerciseSetRow,
+          | 'weight_kg' | 'reps' | 'rir' | 'rpe' | 'set_type' | 'is_completed'
+          | 'technique_breakdown' | 'pain_reported' | 'note' | 'performed_at'
+        >,
+        Updatable<ExerciseSetRow>
+      >;
+      personal_records: TableDefinition<
+        PersonalRecordRow,
+        Insertable<PersonalRecordRow, 'reps' | 'weight_kg' | 'achieved_on' | 'exercise_set_id'>,
+        Updatable<PersonalRecordRow>
+      >;
       shopping_list_items: TableDefinition<
         ShoppingListItemRow,
         Insertable<
@@ -608,6 +791,11 @@ export type Database = {
       difficulty: Difficulty;
       ingredient_category: IngredientCategory;
       meal_plan_mode: PlanMode;
+      movement_pattern: MovementPattern;
+      plan_structure: PlanStructure;
+      set_type: SetType;
+      muscle_role: MuscleRole;
+      pr_kind: PrKind;
     };
     CompositeTypes: Record<string, never>;
   };
