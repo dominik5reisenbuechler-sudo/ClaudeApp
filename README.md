@@ -5,11 +5,12 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–6 complete** — foundation, onboarding, the dashboard,
+**Status: Phases 0–7 complete** — foundation, onboarding, the dashboard,
 nutrition tracking with barcode scanning, the recipe system, the weekly meal
-planner with an aggregated shopping list, and the training side: programme
-generation, a workout logger and the progression engine. See
-[`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
+planner with an aggregated shopping list, the training side (programme
+generation, workout logger, progression engine), and progress analytics with
+charts and personal records. See [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what
+ships when.
 
 ---
 
@@ -29,7 +30,8 @@ changing any figure that reaches a user as advice.
 ## Stack
 
 React Native + Expo (SDK 57) · TypeScript (strict) · Expo Router · Supabase
-(Postgres, Auth, RLS) · TanStack Query · Zod · React Hook Form · Vitest
+(Postgres, Auth, RLS) · TanStack Query · Zod · React Hook Form · react-native-svg
+· Vitest
 
 ## Getting started
 
@@ -102,7 +104,8 @@ barcode check digits, the Open Food Facts mapping, recipe portion scaling,
 macro-fit recipe ranking, meal-plan generation across all eight modes, unit
 conversion and shopping-list aggregation, fractional training volume, the
 progression engine and its blocking conditions, split selection and programme
-generation, date and age arithmetic, and the onboarding-to-domain mapping.
+generation, personal-record detection, strength trends, training consistency,
+date and age arithmetic, and the onboarding-to-domain mapping.
 
 ```bash
 npm test

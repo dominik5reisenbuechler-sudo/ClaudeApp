@@ -248,13 +248,41 @@ muscle, and progression is withheld under each documented blocking condition.
 
 ---
 
-## Phase 7 — Progress ⬜
+## Phase 7 — Progress ✅
 
-- Bodyweight chart (daily + 7-day average + 30-day trend)
-- Measurements
-- Strength progression and personal records
-- Weekly volume per muscle, workout consistency
-- Optional progress photos (private bucket, signed URLs)
+- ✅ Bodyweight chart: daily scatter, 7-day average, 30-day trend
+- ✅ Measurements across six sites
+- ✅ Strength progression per exercise, charted as estimated 1RM
+- ✅ Personal record detection (deferred from phase 6) across three kinds
+- ✅ Weekly fractional volume per muscle, and training consistency
+- ✅ `LineChart` / `BarChart` built on `react-native-svg`, following the design
+  tokens
+
+**Decisions worth recording.**
+
+*Adherence is measured against the user's own plan.* Someone who trains three
+times a week and planned three is at 100%, not 60% of somebody else's five.
+Judging one plan by another's standard is how an app makes a consistent user
+feel like a failing one. It caps at 100 too: an extra session is a bonus, not
+125% adherence.
+
+*A record must be recognisable.* Warm-ups never count, incomplete sets never
+count, and equalling a previous best is not a record — announcing one would
+cheapen the ones that are real. `weight_for_reps` is tracked per rep count,
+because 100 × 5 and 90 × 8 answer different questions.
+
+*Charts are hand-rolled on `react-native-svg`.* The app needs two chart shapes,
+both of which must follow the design tokens exactly in light and dark. A
+general-purpose charting library brings a theming layer to fight with, for
+features this app does not use.
+
+*Estimated 1RM is labelled as an estimate* on screen, and the screen says
+explicitly that it describes what was lifted, not muscle size (CLAUDE.md §45).
+
+**Deferred: progress photos.** They need a private storage bucket with its own
+policies, an image-picker dependency and an upload flow — and the spec lists
+them as optional (§46). `progress_photos` already exists in the schema; the
+screen says plainly that the feature is not there rather than hiding it.
 
 ---
 
@@ -321,3 +349,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 4 | clean | clean | 324 tests / 19 files | 32 routes |
 | 5 | clean | clean | 371 tests / 21 files | 32 routes |
 | 6 | clean | clean | 439 tests / 24 files | 38 routes |
+| 7 | clean | clean | 483 tests / 27 files | 42 routes |

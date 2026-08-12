@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader } from '@/components/layout';
 import { Button, Callout, Card, Chip, ErrorState, LoadingState, Text } from '@/components/ui';
+import { describeRecord } from '@/domain/progress/personalRecords';
+import type { DetectedRecord } from '@/domain/progress/personalRecords';
 import { ExerciseLogger } from '@/features/training/ExerciseLogger';
 import { RestTimer } from '@/features/training/RestTimer';
 import {
@@ -13,6 +15,7 @@ import {
   useExercises,
   useSession,
 } from '@/hooks/useTraining';
+import { useDetectRecordsForSession } from '@/hooks/useProgress';
 import { useTheme } from '@/theme/ThemeProvider';
 
 const RPE_CHOICES = [4, 5, 6, 7, 8, 9, 10] as const;
@@ -34,10 +37,12 @@ export default function WorkoutSessionScreen() {
   const exercises = useExercises();
   const deleteSet = useDeleteSet();
   const complete = useCompleteSession();
+  const detectRecords = useDetectRecordsForSession();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [rest, setRest] = useState<{ seconds: number; startedAtMs: number } | null>(null);
   const [sessionRpe, setSessionRpe] = useState<number | null>(null);
+  const [records, setRecords] = useState<DetectedRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const day = useMemo(() => {
@@ -76,17 +81,58 @@ export default function WorkoutSessionScreen() {
 
   const handleFinish = async () => {
     setError(null);
+    const finished = session.data;
+    if (!finished) return;
+
     try {
-      await complete.mutateAsync({
-        sessionId: session.data?.id as string,
-        sessionRpe,
-        notes: null,
-      });
+      await complete.mutateAsync({ sessionId: finished.id, sessionRpe, notes: null });
+
+      /*
+       * Records are detected here, while the user is still in the gym, rather
+       * than by a background job. A personal best is worth seeing in the moment
+       * — and a failure to detect one must never lose the completed session, so
+       * this runs after the completion write and swallows its own errors.
+       */
+      try {
+        const detected = await detectRecords.mutateAsync(finished);
+        if (detected.length > 0) {
+          setRecords(detected);
+          return;
+        }
+      } catch {
+        // The session is saved either way; records can be recomputed later.
+      }
+
       router.replace('/training');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not finish the session.');
     }
   };
+
+  if (records) {
+    return (
+      <Screen footer={<Button label="Done" onPress={() => router.replace('/training')} />}>
+        <ScreenHeader eyebrow="Session complete" title="New personal best" />
+        <View style={{ gap: theme.spacing.md }}>
+          {records.map((record) => (
+            <Card key={`${record.exerciseId}-${record.kind}-${record.reps ?? 'any'}`} padding="md">
+              <View style={{ gap: theme.spacing.xs }}>
+                <Text variant="bodyStrong">{formatExercise(record.exerciseId)}</Text>
+                <Text variant="caption" tone="accent">
+                  {describeRecord(record)}
+                </Text>
+                {record.previousValue !== null ? (
+                  <Text variant="caption" tone="tertiary">
+                    Previous best {record.previousValue}
+                  </Text>
+                ) : null}
+              </View>
+            </Card>
+          ))}
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen
@@ -195,4 +241,8 @@ export default function WorkoutSessionScreen() {
       </Card>
     </Screen>
   );
+}
+
+function formatExercise(exerciseId: string): string {
+  return exerciseId.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }

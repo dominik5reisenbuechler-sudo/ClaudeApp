@@ -12,6 +12,8 @@ export type { ButtonSize, ButtonVariant } from './Button';
 export { Card } from './Card';
 export { Chip, OptionCard, Stepper } from './Chip';
 export { Input, NumberInput, SearchInput } from './Input';
+export { BarChart, LineChart } from './LineChart';
+export type { ChartSeries } from './LineChart';
 export { MacroProgress } from './MacroProgress';
 export type { MacroKind } from './MacroProgress';
 export { ProgressBar } from './ProgressBar';
