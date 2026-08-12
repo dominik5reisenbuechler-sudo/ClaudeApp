@@ -139,10 +139,29 @@ muscle, workout consistency, calories/protein/steps adherence, optional photos.
 ### 4.8 Adaptive engine
 
 Weekly check-in (performance, hunger, energy, sleep, stress, adherence,
-satisfaction) combined with objective data produces a recommendation set:
-calorie adjustment, macro adjustment, volume adjustment, deload, exercise
-progression, plan change. Adjustments are conservative (±100 kcal class) and
-suppressed when confidence is low.
+satisfaction, joint discomfort) combined with objective data produces a
+recommendation set: calorie adjustment, macro adjustment, volume adjustment,
+deload, exercise progression, plan change. Adjustments are conservative
+(±100 kcal class) and suppressed when confidence is low.
+
+What makes it trustworthy is what it *declines* to do:
+
+- The measured expenditure figure is shown at every confidence level, but below
+  0.4 confidence it moves nothing. Confidence gates action, not display.
+- Poor logging produces an adherence message, not a new target. Moving a number
+  the user was not hitting anyway hides the real problem instead of solving it.
+- A rate inside the goal's band is left alone. Chasing the midpoint every week
+  would mean changing someone's food for no reason.
+- A stall is not automatically a volume problem: adherence, training frequency
+  and recovery are checked before more sets are ever proposed.
+- Deloads need two independent fatigue signals — with sustained joint discomfort
+  the one exception, acted on alone.
+- At most two muscles change in a week. Change eight things at once and next
+  week's data cannot tell you which one worked.
+
+Every recommendation carries the reasoning that produced it, built from the
+user's own numbers, plus the evidence rules it rests on. Accepting one writes a
+new target; rejecting it changes nothing. Neither is ever deleted.
 
 ### 4.9 Gamification
 

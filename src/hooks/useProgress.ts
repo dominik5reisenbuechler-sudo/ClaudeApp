@@ -6,7 +6,6 @@ import { detectPersonalRecords } from '@/domain/progress/personalRecords';
 import type { RecordCandidateSet } from '@/domain/progress/personalRecords';
 import { summarizeConsistency, sessionsPerWeek } from '@/domain/progress/consistency';
 import { strengthTrend, trackedExercises } from '@/domain/progress/strengthProgress';
-import type { StrengthSet } from '@/domain/progress/strengthProgress';
 import {
   deleteMeasurement,
   fetchMeasurements,
@@ -17,6 +16,7 @@ import {
 } from '@/services/progressService';
 import { useSessionHistory } from './useTraining';
 import { usePreferences } from './useProfile';
+import { toStrengthSets } from '@/services/trainingService';
 import type { FullSession } from '@/services/trainingService';
 import type { MeasurementSite } from '@/types/database';
 import type { IsoDate } from '@/types/domain';
@@ -86,19 +86,6 @@ export function usePersonalRecords() {
 }
 
 /** Sets from completed sessions, in the shape the progress domain consumes. */
-function toStrengthSets(sessions: readonly FullSession[]): StrengthSet[] {
-  return sessions.flatMap((session) =>
-    session.sets.map((set) => ({
-      exerciseId: set.exercise_id,
-      weightKg: set.weight_kg === null ? null : Number(set.weight_kg),
-      reps: set.reps === null ? null : Number(set.reps),
-      setType: set.set_type,
-      isCompleted: set.is_completed,
-      performedOn: set.performed_at.slice(0, 10) as IsoDate,
-    })),
-  );
-}
-
 function toRecordCandidates(session: FullSession): RecordCandidateSet[] {
   return session.sets.map((set) => ({
     id: set.id,

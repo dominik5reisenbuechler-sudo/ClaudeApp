@@ -2,6 +2,7 @@ import { getSupabase } from '@/lib/supabase';
 import type { GeneratedTrainingPlan, PlannableExercise } from '@/domain/training/planGeneration';
 import type { ContributionMap, MuscleContribution, PerformedSet } from '@/domain/training/volume';
 import type { LoggedSet } from '@/domain/training/progression';
+import type { StrengthSet } from '@/domain/progress/strengthProgress';
 import type {
   ExerciseMuscleRow,
   ExerciseRow,
@@ -396,6 +397,20 @@ export function toPerformedSets(sessions: readonly FullSession[]): PerformedSet[
       isCompleted: set.is_completed,
       performedOn: set.performed_at.slice(0, 10) as IsoDate,
       reps: set.reps === null ? null : Number(set.reps),
+    })),
+  );
+}
+
+/** Sets in the shape the strength-progress and stall analyses consume. */
+export function toStrengthSets(sessions: readonly FullSession[]): StrengthSet[] {
+  return sessions.flatMap((session) =>
+    session.sets.map((set) => ({
+      exerciseId: set.exercise_id,
+      weightKg: set.weight_kg === null ? null : Number(set.weight_kg),
+      reps: set.reps === null ? null : Number(set.reps),
+      setType: set.set_type,
+      isCompleted: set.is_completed,
+      performedOn: set.performed_at.slice(0, 10) as IsoDate,
     })),
   );
 }

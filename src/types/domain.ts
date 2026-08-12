@@ -90,6 +90,27 @@ export type MuscleRole = (typeof MUSCLE_ROLES)[number];
 export const PR_KINDS = ['estimated_1rm', 'weight_for_reps', 'session_volume'] as const;
 export type PrKind = (typeof PR_KINDS)[number];
 
+export const RECOMMENDATION_TYPES = [
+  'calorie_adjustment',
+  'macro_adjustment',
+  'volume_adjustment',
+  'deload',
+  'exercise_progression',
+  'adherence',
+  'no_change',
+] as const;
+export type RecommendationType = (typeof RECOMMENDATION_TYPES)[number];
+
+export const RECOMMENDATION_STATUSES = ['pending', 'accepted', 'rejected', 'expired'] as const;
+export type RecommendationStatus = (typeof RECOMMENDATION_STATUSES)[number];
+
+/**
+ * How well supported a rule is. `mechanistic` means it follows from physiology
+ * rather than from a trial that tested it — an honest label, not a weak one.
+ */
+export const EVIDENCE_LEVELS = ['strong', 'moderate', 'limited', 'mechanistic'] as const;
+export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
+
 export const PLAN_MODES = [
   'balanced',
   'maximum_variety',

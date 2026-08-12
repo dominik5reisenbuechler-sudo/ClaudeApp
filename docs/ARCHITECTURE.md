@@ -123,13 +123,15 @@ src/
     onboarding/               step components, draft store, schemas
     auth/
     dashboard/
+    checkin/                  scale fields, recommendation + TDEE cards
   domain/
     nutrition/                energy, macros, weightTrend, tdeeEstimator,
                               goalAdjustment
     training/                 volume, progression, split generation
     activity/                 steps, activity factors
     progress/                 trends, PRs
-    recommendations/          recommendation assembly + explanations
+    recommendations/          recovery scoring, calorie + training engines,
+                              weekly assembly, explanations
     gamification/             xp, streaks, achievements
   hooks/
   services/                   supabase repositories
@@ -176,14 +178,35 @@ Screen → RHF + Zod validate → mutation hook → service → Supabase
                                         query invalidation
 ```
 
-### Adaptive loop (Phase 8)
+### Adaptive loop
 
-A weekly job (Edge Function or on-open computation) reads 14–28 days of
-`weight_logs`, `food_entries` and `workout_sessions`, runs
-`domain/nutrition/tdeeEstimator` and `domain/recommendations`, and writes rows
-into `recommendations` with `reason` and `confidence`. The user accepts or
-rejects; acceptance is what changes their targets. **The engine never silently
-mutates a user's targets.**
+Computed on open rather than by a scheduled job. `hooks/useCheckin` reads
+14–28 days of `weight_logs`, `food_entries` and `workout_sessions` through
+queries that already exist, converts them with pure functions, and hands them
+to `domain/recommendations/weeklyCheckin.reviewWeek`. Nothing is written until
+the user submits the check-in.
+
+    logs ──▶ tdeeEstimator ──▶ calorieAdjustment ─┐
+    logs ──▶ reviewInputs   ──▶ trainingAdjustment ┼─▶ reviewWeek ──▶ recommendations
+    check-in answers ──▶ recovery ────────────────┘
+
+An Edge Function was the obvious shape and is the wrong one for now: the
+computation is pure, cheap, and depends only on rows the client has already
+fetched for other screens. Running it server-side would add a deployment
+artefact, a second copy of the rules, and a scheduling story, to save work that
+takes milliseconds. It becomes worthwhile when recommendations need to arrive
+as a push notification rather than when the user opens the app.
+
+The engine's own restraint is the part worth protecting:
+
+- **Confidence gates action, not display.** The TDEE estimate is always shown;
+  below 0.4 confidence it moves nothing.
+- **A deload supersedes volume changes**, and at most two muscles change in a
+  week — change eight things at once and next week's data cannot attribute the
+  result.
+- **A recommendation is a proposal.** Accepting writes a *new* `user_targets`
+  row; rejecting records the answer and changes nothing. **The engine never
+  silently mutates a user's targets**, and nothing is ever deleted.
 
 ---
 

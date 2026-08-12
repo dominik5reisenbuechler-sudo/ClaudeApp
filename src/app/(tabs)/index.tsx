@@ -9,6 +9,7 @@ import { totalsFor } from '@/domain/nutrition/dailyTotals';
 import { GOAL_LABELS } from '@/domain/nutrition/goalAdjustment';
 import { buildPendingActions } from '@/domain/progress/pendingActions';
 import { summarizeWeight } from '@/domain/progress/weightSummary';
+import { CheckinPromptCard } from '@/features/dashboard/CheckinPromptCard';
 import { NutritionTargetsCard } from '@/features/dashboard/NutritionTargetsCard';
 import { PendingActionsCard } from '@/features/dashboard/PendingActionsCard';
 import { StepsCard } from '@/features/dashboard/StepsCard';
@@ -126,6 +127,7 @@ export default function HomeScreen() {
 
       {target.data ? (
         <>
+          <CheckinPromptCard />
           <PendingActionsCard actions={pendingActions} />
           <NutritionTargetsCard
             target={target.data}
@@ -144,9 +146,9 @@ export default function HomeScreen() {
 
           <View style={{ marginTop: theme.spacing.sm }}>
             <Callout tone="info" title="Your targets will change">
-              Right now these numbers come from an equation. Once you have two to three weeks of
-              weigh-ins logged, we replace that estimate with your measured expenditure and adjust
-              — with an explanation every time.
+              These numbers start from an equation. Once you have two to three weeks of weigh-ins
+              and food logs, the weekly check-in replaces that estimate with your measured
+              expenditure and adjusts from there — with an explanation every time.
             </Callout>
           </View>
         </>

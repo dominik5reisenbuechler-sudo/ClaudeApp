@@ -189,6 +189,10 @@ overwritten, so "why did my target change?" is always answerable.
 - **`recommendations`** — `user_id`, `type`, `current_value jsonb`,
   `suggested_value jsonb`, `reason text`, `confidence numeric 0..1`,
   `evidence_rule_ids text[]`, `status recommendation_status`, `responded_at`.
+  `reason` carries a `length(trim(reason)) >= 20` check: an unexplainable
+  recommendation is unrepresentable rather than merely discouraged. There is
+  **no delete policy** — a recommendation the user rejected is part of the
+  record of what the engine advised.
 - **`evidence_rules`** — versionable science. `id`, `category`, `rule_key`,
   `recommendation`, `minimum_value`, `maximum_value`, `unit`,
   `evidence_level`, `confidence`, `source_title`, `source_url`,
@@ -236,24 +240,29 @@ Beyond primary keys and the uniqueness constraints above:
 | `0006_recipes.sql` | ingredients, recipes, recipe ingredients, instructions, favourites |
 | `0007_meal_planning.sql` | meal plans, days, entries, pantry, shopping lists and items |
 | `0008_training.sql` | muscles, exercises, fractional credits, alternatives, plans, sessions, sets, PRs |
-| `0009_adaptive_and_gamification.sql` | check-ins, recommendations, evidence rules, XP, streaks, achievements |
-| `0010_gdpr.sql` | export/deletion request tables |
+| `0009_adaptive_engine.sql` | check-ins, recommendations, evidence rules |
+| `0010_gamification.sql` | XP, streaks, achievements |
+| `0011_gdpr.sql` | export/deletion request tables |
 
 Migrations land with the phase that uses them — a table with no reader is a
 schema guess, not a schema. `0001`–`0004` shipped with phases 0–2;
-`0005` with phase 3; `0006` with phase 4; `0007` with phase 5; `0008` with phase 6.
+`0005` with phase 3; `0006` with phase 4; `0007` with phase 5; `0008` with phase 6;
+`0009` with phase 8. Gamification split out of `0009` into its own migration,
+because the adaptive engine shipped without it and a migration carrying tables
+nothing reads is exactly the schema guess this ordering exists to avoid.
 `ingredients`
 moved out of `0005` and into `0006`, since nothing read it until recipes
 existed.
 
-**Applied so far:** `0001`–`0008`.
+**Applied so far:** `0001`–`0009`.
 
 ## Seeds
 
 `supabase/seed/0001_ingredients_and_recipes.sql` loads 60 canonical ingredients
 and 20 recipes. `supabase/seed/0002_muscles_and_exercises.sql` loads the
 eighteen-muscle model, 42 exercises, their fractional set credits and their
-alternatives. Ingredients upsert on `slug`; recipes are deleted and
+alternatives. `supabase/seed/0003_evidence_rules.sql` loads every rule the
+recommendation engine cites, at version 1. Ingredients upsert on `slug`; recipes are deleted and
 re-inserted, which is safe because `food_entries.recipe_id` is
 `on delete set null` and each entry carries its own macro snapshot — a reseed
 cannot rewrite anyone's history.

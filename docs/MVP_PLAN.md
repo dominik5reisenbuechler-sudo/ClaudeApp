@@ -286,17 +286,53 @@ screen says plainly that the feature is not there rather than hiding it.
 
 ---
 
-## Phase 8 — Adaptive engine ⬜
+## Phase 8 — Adaptive engine ✅
 
-- Adaptive TDEE estimator over a 14–28 day window with confidence scoring
-- Weekly check-in flow
-- Calorie/macro adjustment recommendations, confidence-gated
-- Training volume + deload recommendations
-- Explanation strings assembled from the real inputs
-- Accept/reject writes a new `user_targets` row
+- ✅ Adaptive TDEE estimator over a 14–28 day window with confidence scoring
+  (`domain/nutrition/tdeeEstimator.ts`). Confidence is the **product** of four
+  independent components, so one missing component sinks the score rather than
+  being averaged away by the others.
+- ✅ Weekly check-in flow: `weekly_checkins` (migration 0009), the scale form,
+  and a live preview of the recommendations as the answers come in.
+- ✅ Calorie adjustment recommendations, confidence-gated
+  (`domain/recommendations/calorieAdjustment.ts`). Four gates defend the default
+  of "no change": usable estimate → adherence → rate genuinely off band → enough
+  time since the last change.
+- ✅ Training volume and deload recommendations
+  (`domain/recommendations/trainingAdjustment.ts`). Cheaper explanations for a
+  stall are checked before more sets; deloads need two independent fatigue
+  signals, or sustained joint discomfort on its own.
+- ✅ Explanation strings assembled from the real inputs. The database enforces
+  it: `recommendations.reason` carries a `length(trim(reason)) >= 20` check, so
+  an unexplainable recommendation is unrepresentable.
+- ✅ Accept writes a new `user_targets` row with recomputed macros and a basis
+  pointing back at the recommendation; reject records the answer and changes
+  nothing. Neither deletes anything.
+- ✅ `evidence_rules` seeded with every rule key the engine cites, versioned so
+  a past recommendation stays explainable in its own terms.
 
 **Done when:** the engine refuses to adjust at low confidence and every emitted
-recommendation cites its actual numbers.
+recommendation cites its actual numbers. — met; `calorieAdjustment.test.ts`
+pins the refusal, and every engine's test file asserts that each outcome carries
+a substantial reason and at least one evidence rule.
+
+**Deferred, with reasons:**
+
+- **Macro adjustment recommendations.** Macros are recomputed from the accepted
+  calorie figure, which is the change that matters. A separate `macro_adjustment`
+  proposal would need a reason to move protein or fat *independently* of energy,
+  and the honest version of that rests on data the app does not collect yet
+  (training performance per macro split). The type exists; the engine does not
+  emit it.
+- **`weeksSinceLastDeload` is always null.** Nothing records that a deload was
+  actually *performed* — an accepted recommendation is not proof it happened.
+  Until deload weeks are represented in the training plan, passing the accepted
+  date would be asserting something we do not know, so the interval gate is
+  present and tested but never fires in the app. Phase 9 or 10 work.
+- **Exercise-level progression recommendations** already exist as
+  `computeProgression` (Phase 6) and run inside the session logger. They are not
+  routed through the weekly check-in, because they are per-set decisions rather
+  than weekly ones.
 
 ---
 
@@ -350,3 +386,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 5 | clean | clean | 371 tests / 21 files | 32 routes |
 | 6 | clean | clean | 439 tests / 24 files | 38 routes |
 | 7 | clean | clean | 483 tests / 27 files | 42 routes |
+| 8 | clean | clean | 611 tests / 33 files | 44 routes |

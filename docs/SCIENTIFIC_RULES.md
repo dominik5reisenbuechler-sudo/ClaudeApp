@@ -147,6 +147,13 @@ Rates are expressed as **% of bodyweight per week**, not absolute kg, because a
 | Cut | −0.5 % to −1.0 % | ≈ −20 % of TDEE, capped at −750 kcal |
 | Maintenance | ±0.1 % | 0 |
 
+| rule_key | range | unit | evidence |
+|---|---|---|---|
+| `goal.rate_band.lean_bulk` | +0.25 to +0.5 | %BW/week | moderate |
+| `goal.rate_band.recomposition` | −0.1 to +0.1 | %BW/week | limited |
+| `goal.rate_band.cut` | −1.0 to −0.5 | %BW/week | moderate |
+| `goal.rate_band.maintenance` | −0.1 to +0.1 | %BW/week | moderate |
+
 **Lean bulk.** Faster gain does not produce proportionally more muscle; it
 produces more fat, which shortens the productive length of the phase.
 Advanced trainees should sit at the bottom of the range — realistic muscle gain
@@ -190,6 +197,28 @@ no more than once per 14 days, and only when the observed rate has missed the
 target band for two consecutive weeks with adequate adherence. If adherence is
 poor, the correct recommendation is to address adherence — not to move the
 target.
+
+The **confidence of the TDEE estimate caps the size of the adjustment**, and
+below the gate no adjustment is permitted at all — the estimate is still shown,
+because hiding it would be worse, but it does not move anyone's food.
+
+| Confidence | Maximum adjustment |
+|---|---|
+| < 0.4 | none |
+| 0.4 – 0.7 | ±100 kcal |
+| > 0.7 | ±200 kcal |
+
+Adherence gate: fewer than **4 logged days per week** over the window means the
+observed rate says more about logging than about physiology, and the
+recommendation names that instead of moving the target.
+
+| rule_key | value | unit | evidence |
+|---|---|---|---|
+| `calorie.adjustment_interval` | 14 | days | moderate |
+| `calorie.adjustment_max` | 200 | kcal | moderate |
+| `tdee.confidence_gate` | 0.4 | 0–1 | mechanistic |
+| `adherence.min_logged_days_per_week` | 4 | days/week | mechanistic |
+| `safety.block_deficit` | — | — | strong |
 
 ---
 
@@ -341,6 +370,26 @@ degraded recovery scores, or sustained low motivation.
 
 Typical form: one week at ~50 % of normal volume with load maintained, or
 normal volume at a substantially reduced intensity.
+
+**Two independent signals are required** before a deload is proposed. Any one
+of them alone is as likely to be a single rough week, and a week of training is
+too expensive to give up on one reading. The exception is joint discomfort
+sustained across two or more weeks, which is acted on by itself — waiting for a
+second opinion there risks an injury rather than a bad week.
+
+A deload is never proposed within 4 weeks of the last one: without accumulated
+work there is nothing to recover from.
+
+| rule_key | value | unit | evidence |
+|---|---|---|---|
+| `training.deload.evidence_based` | 2 | signals | mechanistic |
+| `training.deload.interval_min` | 4 | weeks | mechanistic |
+| `training.deload.stalled_weeks` | 2 | weeks | moderate |
+| `training.deload.rpe_rise` | 1 | RPE at equal load | limited |
+| `training.deload.joint_discomfort` | 2 | weeks | mechanistic |
+| `training.deload.recovery` | 0.4 | 0–1 recovery score | limited |
+| `training.deload.block_length` | 8 | weeks | limited |
+| `training.deload.volume_percent` | 50 | % of normal sets | moderate |
 
 ### 4.7 Exercise selection
 

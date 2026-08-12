@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0008.
+ * Database types for the tables created by migrations 0001–0009.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -15,6 +15,7 @@ import type {
   ActivityLevel,
   DietType,
   Difficulty,
+  EvidenceLevel,
   ExperienceLevel,
   FoodSource,
   GoalType,
@@ -29,6 +30,8 @@ import type {
   PlanMode,
   PlanStructure,
   PrKind,
+  RecommendationStatus,
+  RecommendationType,
   SetType,
   Sex,
   TargetSource,
@@ -505,6 +508,61 @@ export type PersonalRecordRow = {
   created_at: string;
 }
 
+// --- 0009 adaptive engine ---------------------------------------------------
+
+export type WeeklyCheckinRow = Timestamps & {
+  id: string;
+  user_id: string;
+  /** Always a Monday. */
+  week_start_date: IsoDate;
+  /** 1–5. Null means skipped — a missing answer is not a 3. */
+  training_performance: number | null;
+  hunger: number | null;
+  energy: number | null;
+  sleep_quality: number | null;
+  stress: number | null;
+  diet_adherence: number | null;
+  training_satisfaction: number | null;
+  /** 0–4. */
+  joint_discomfort: number | null;
+  notes: string | null;
+  /** Snapshot of the objective inputs the engine saw. */
+  computed: Json;
+}
+
+export type RecommendationRow = Timestamps & {
+  id: string;
+  user_id: string;
+  weekly_checkin_id: string | null;
+  type: RecommendationType;
+  current_value: Json;
+  suggested_value: Json;
+  reason: string;
+  confidence: number;
+  evidence_rule_ids: string[];
+  status: RecommendationStatus;
+  responded_at: string | null;
+}
+
+export type EvidenceRuleRow = {
+  id: string;
+  category: string;
+  rule_key: string;
+  recommendation: string;
+  minimum_value: number | null;
+  maximum_value: number | null;
+  unit: string | null;
+  evidence_level: EvidenceLevel;
+  confidence: number | null;
+  source_title: string | null;
+  source_url: string | null;
+  publication_year: number | null;
+  last_reviewed_at: IsoDate | null;
+  version: number;
+  is_active: boolean;
+  created_at: string;
+}
+
 export type ShoppingListItemRow = Timestamps & {
   id: string;
   shopping_list_id: string;
@@ -763,6 +821,30 @@ export type Database = {
         Insertable<ProgressPhotoRow, 'taken_on' | 'pose'>,
         Updatable<ProgressPhotoRow>
       >;
+      weekly_checkins: TableDefinition<
+        WeeklyCheckinRow,
+        Insertable<
+          WeeklyCheckinRow,
+          | 'training_performance' | 'hunger' | 'energy' | 'sleep_quality' | 'stress'
+          | 'diet_adherence' | 'training_satisfaction' | 'joint_discomfort'
+          | 'notes' | 'computed'
+        >,
+        Updatable<WeeklyCheckinRow>
+      >;
+      recommendations: TableDefinition<
+        RecommendationRow,
+        Insertable<
+          RecommendationRow,
+          | 'weekly_checkin_id' | 'current_value' | 'suggested_value'
+          | 'evidence_rule_ids' | 'status' | 'responded_at'
+        >,
+        Updatable<RecommendationRow>
+      >;
+      evidence_rules: TableDefinition<
+        EvidenceRuleRow,
+        Insertable<EvidenceRuleRow, keyof EvidenceRuleRow>,
+        Updatable<EvidenceRuleRow>
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -796,6 +878,9 @@ export type Database = {
       set_type: SetType;
       muscle_role: MuscleRole;
       pr_kind: PrKind;
+      recommendation_type: RecommendationType;
+      recommendation_status: RecommendationStatus;
+      evidence_level: EvidenceLevel;
     };
     CompositeTypes: Record<string, never>;
   };
