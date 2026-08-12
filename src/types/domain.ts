@@ -46,6 +46,9 @@ export type MealType = (typeof MEAL_TYPES)[number];
 export const FOOD_SOURCES = ['generic', 'branded', 'user', 'barcode', 'recipe'] as const;
 export type FoodSource = (typeof FOOD_SOURCES)[number];
 
+export const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
 export const UNIT_SYSTEMS = ['metric', 'imperial'] as const;
 export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
 

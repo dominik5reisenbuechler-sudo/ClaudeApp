@@ -14,6 +14,7 @@ import {
 import { MealSection } from '@/features/nutrition/MealSection';
 import { NutritionSubNav } from '@/features/nutrition/NutritionSubNav';
 import { QuickAddSheet } from '@/features/nutrition/QuickAddSheet';
+import { SaveMealSheet } from '@/features/nutrition/SaveMealSheet';
 import { useDeleteFoodEntry, useFoodEntries, toLoggedEntries } from '@/hooks/useNutrition';
 import { useActiveTarget } from '@/hooks/useProfile';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -38,6 +39,7 @@ export default function NutritionTodayScreen() {
   const deleteEntry = useDeleteFoodEntry();
 
   const [quickAddMeal, setQuickAddMeal] = useState<MealType | null>(null);
+  const [saveMealFor, setSaveMealFor] = useState<MealType | null>(null);
 
   const rows = useMemo(() => entries.data ?? [], [entries.data]);
   const logged = useMemo(() => toLoggedEntries(rows), [rows]);
@@ -147,6 +149,7 @@ export default function NutritionTodayScreen() {
             totals={byMeal[meal]}
             onAdd={() => router.push(`/nutrition/add?meal=${meal}`)}
             onRemove={(entryId) => void deleteEntry.mutateAsync(entryId)}
+            onSaveAsMeal={() => setSaveMealFor(meal)}
           />
         ))}
       </View>
@@ -166,6 +169,13 @@ export default function NutritionTodayScreen() {
         mealType={quickAddMeal ?? 'snack'}
         loggedOn={today}
         onClose={() => setQuickAddMeal(null)}
+      />
+
+      <SaveMealSheet
+        visible={saveMealFor !== null}
+        mealType={saveMealFor ?? 'snack'}
+        entries={rows.filter((row) => row.meal_type === saveMealFor)}
+        onClose={() => setSaveMealFor(null)}
       />
     </Screen>
   );

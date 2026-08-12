@@ -50,6 +50,7 @@ export interface CreateFoodEntryInput {
   unit?: string;
   foodId?: string | null;
   savedMealId?: string | null;
+  recipeId?: string | null;
   energyKcal: number;
   proteinG: number | null;
   carbsG: number | null;
@@ -71,7 +72,7 @@ export async function createFoodEntry(
     unit: input.unit ?? 'g',
     food_id: input.foodId ?? null,
     saved_meal_id: input.savedMealId ?? null,
-    recipe_id: null,
+    recipe_id: input.recipeId ?? null,
     energy_kcal: input.energyKcal,
     protein_g: input.proteinG,
     carbs_g: input.carbsG,

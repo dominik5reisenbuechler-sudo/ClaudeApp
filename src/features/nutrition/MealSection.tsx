@@ -13,9 +13,18 @@ interface MealSectionProps {
   totals: DailyTotals;
   onAdd: () => void;
   onRemove: (entryId: string) => void;
+  /** Offered only when the meal contains something a saved meal can hold. */
+  onSaveAsMeal?: () => void;
 }
 
-export function MealSection({ mealType, entries, totals, onAdd, onRemove }: MealSectionProps) {
+export function MealSection({
+  mealType,
+  entries,
+  totals,
+  onAdd,
+  onRemove,
+  onSaveAsMeal,
+}: MealSectionProps) {
   const theme = useTheme();
 
   return (
@@ -74,14 +83,28 @@ export function MealSection({ mealType, entries, totals, onAdd, onRemove }: Meal
           </View>
         )}
 
-        <Pressable accessibilityRole="button" onPress={onAdd} hitSlop={6}>
-          <Text variant="caption" tone="accent">
-            + Add food
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: theme.spacing.xl }}>
+          <Pressable accessibilityRole="button" onPress={onAdd} hitSlop={6}>
+            <Text variant="caption" tone="accent">
+              + Add food
+            </Text>
+          </Pressable>
+          {onSaveAsMeal && hasSavableEntries(entries) ? (
+            <Pressable accessibilityRole="button" onPress={onSaveAsMeal} hitSlop={6}>
+              <Text variant="caption" tone="tertiary">
+                Save as meal
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </Card>
   );
+}
+
+/** Only gram-based food entries can go into a saved meal. */
+function hasSavableEntries(entries: readonly FoodEntryRow[]): boolean {
+  return entries.some((entry) => entry.food_id !== null && entry.unit === 'g');
 }
 
 function formatQuantity(entry: FoodEntryRow): string {

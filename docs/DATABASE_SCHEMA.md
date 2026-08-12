@@ -233,7 +233,7 @@ Beyond primary keys and the uniqueness constraints above:
 | `0003_profiles_and_preferences.sql` | `profiles`, `user_goals`, `user_preferences`, `user_targets`, `user_consents`, new-user trigger |
 | `0004_body_and_activity_logs.sql` | weight, measurements, steps, activity, recovery, photos |
 | `0005_nutrition.sql` | foods, food entries, saved meals, favourites, `search_foods()` |
-| `0006_recipes.sql` | recipes, ingredients, instructions, favourites |
+| `0006_recipes.sql` | ingredients, recipes, recipe ingredients, instructions, favourites |
 | `0007_meal_planning.sql` | meal plans, shopping lists, pantry |
 | `0008_training.sql` | muscles, exercises, plans, sessions, sets, PRs |
 | `0009_adaptive_and_gamification.sql` | check-ins, recommendations, evidence rules, XP, streaks, achievements |
@@ -241,10 +241,21 @@ Beyond primary keys and the uniqueness constraints above:
 
 Migrations land with the phase that uses them — a table with no reader is a
 schema guess, not a schema. `0001`–`0004` shipped with phases 0–2;
-`0005` with phase 3. `ingredients` moved out of `0005` and into `0006`, since
-nothing reads it until recipes exist.
+`0005` with phase 3; `0006` with phase 4. `ingredients` moved out of `0005` and
+into `0006`, since nothing read it until recipes existed.
 
-**Applied so far:** `0001`–`0005`.
+**Applied so far:** `0001`–`0006`.
+
+## Seeds
+
+`supabase/seed/0001_ingredients_and_recipes.sql` loads 60 canonical ingredients
+and 20 recipes. Ingredients upsert on `slug`; recipes are deleted and
+re-inserted, which is safe because `food_entries.recipe_id` is
+`on delete set null` and each entry carries its own macro snapshot — a reseed
+cannot rewrite anyone's history.
+
+Seeds run as the service role. RLS write policies deliberately do not let a
+client touch the shared catalogue.
 
 ## New-user bootstrap
 

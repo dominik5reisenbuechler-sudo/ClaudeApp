@@ -119,17 +119,46 @@ product missing fibre data logs without crashing or silently zeroing.
 
 ---
 
-## Phase 4 — Recipes ⬜
+## Phase 4 — Recipes ✅
 
-- Recipe schema + seed set across breakfast/lunch/dinner/snack (original or
-  attributed content only — see `PRODUCT_SPEC.md` §4.4)
-- Discovery UI with category rails and filters
-- Recipe detail, favourites
-- Portion scaling (ingredients + macros), with non-scalable ingredients honoured
-- Smart recommendations ranked against remaining daily macros
+- ✅ Recipe schema (`0006`): ingredients, recipes, recipe ingredients,
+  instructions, favourites
+- ✅ Seed catalogue of 20 recipes across breakfast/lunch/dinner/snack, plus 60
+  canonical ingredients — **all recipe text is original work** (`source` records
+  it; see `PRODUCT_SPEC.md` §4.4)
+- ✅ Discovery UI: ranked recommendations, meal-type rails, search, tag filters
+- ✅ Recipe detail with a live servings selector, method, allergen warnings
+- ✅ Favourites
+- ✅ Portion scaling with non-scalable ingredients honoured
+- ✅ Recommendations ranked against remaining daily macros
+- ✅ Saved meals (deferred from phase 3): save a logged meal, re-log it in one
+  tap
 
-**Done when:** "620 kcal / 55 g protein remaining" returns a sensible ranked
-list respecting diet type, allergens and dislikes.
+**Three decisions worth recording.**
+
+*Scaling is not multiplication.* `is_scalable = false` marks the pinch of salt
+and the oil for one pan — doubling those with the servings produces recipes
+nobody would cook. Quantities are also rounded per-unit: 135 g of rice, half a
+chicken breast, a quarter teaspoon. And the logged macros come from the exact
+factor, never the rounded ingredients, so the kitchen view and the diary entry
+cannot disagree.
+
+*Only two things are hard exclusions* — allergens and diet. Disliked foods rank
+a recipe down and say so; they never hide it. A user who dislikes olives
+occasionally still wants to see the olive recipe.
+
+*Halal and kosher return `unverifiable`.* Certification depends on sourcing and
+preparation we have no data for. We exclude what is clearly disqualifying
+(pork, alcohol, shellfish) and tell the user we cannot confirm the rest, rather
+than claiming a compliance we cannot verify.
+
+**Deferred:** smart scaling (CLAUDE.md §19 — "increase the chicken to hit 60 g
+protein") is explicitly optional there, and belongs with the meal planner's
+generation logic in phase 5. Recipe images are not seeded; the schema has
+`image_path` ready.
+
+**Done:** "620 kcal / 55 g protein remaining" returns a ranked list respecting
+diet type, allergens and dislikes, with a stated reason per suggestion.
 
 ---
 
@@ -232,3 +261,4 @@ type checking does not catch a broken import graph or a route conflict.
 | 0 + 1 | clean | clean | 168 tests / 10 files | 20 routes |
 | 2 | clean | clean | 211 tests / 13 files | 20 routes |
 | 3 | clean | clean | 276 tests / 17 files | 30 routes |
+| 4 | clean | clean | 324 tests / 19 files | 32 routes |

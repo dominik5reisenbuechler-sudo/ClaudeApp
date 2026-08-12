@@ -1,5 +1,5 @@
 /**
- * Database types for the tables created by migrations 0001–0005.
+ * Database types for the tables created by migrations 0001–0006.
  *
  * Hand-maintained rather than generated, for now: `supabase gen types` needs a
  * live project, and a checked-in generated file that nobody can regenerate is
@@ -14,6 +14,7 @@
 import type {
   ActivityLevel,
   DietType,
+  Difficulty,
   ExperienceLevel,
   FoodSource,
   GoalType,
@@ -263,6 +264,84 @@ export type FoodFavoriteRow = {
   created_at: string;
 }
 
+export type IngredientCategory =
+  | 'meat_fish'
+  | 'dairy'
+  | 'eggs'
+  | 'vegetables'
+  | 'fruit'
+  | 'carbs'
+  | 'frozen'
+  | 'canned'
+  | 'spices'
+  | 'other';
+
+export type IngredientRow = Timestamps & {
+  id: string;
+  slug: string;
+  name: string;
+  category: IngredientCategory;
+  default_unit: string;
+  density_g_per_ml: number | null;
+  package_sizes: number[];
+  food_id: string | null;
+  allergens: string[];
+}
+
+/** Per-serving macros are authored values; energy required, rest nullable. */
+export type RecipeRow = Timestamps & {
+  id: string;
+  slug: string | null;
+  title: string;
+  description: string | null;
+  image_path: string | null;
+  meal_type: MealType;
+  prep_minutes: number;
+  cook_minutes: number;
+  difficulty: Difficulty;
+  servings: number;
+  calories_per_serving: number;
+  protein_per_serving: number | null;
+  carbs_per_serving: number | null;
+  fat_per_serving: number | null;
+  fiber_per_serving: number | null;
+  dietary_tags: string[];
+  allergens: string[];
+  meal_prep_rating: number;
+  cost_band: number;
+  source: string;
+  source_url: string | null;
+  is_public: boolean;
+  created_by: string | null;
+}
+
+export type RecipeIngredientRow = {
+  id: string;
+  recipe_id: string;
+  ingredient_id: string;
+  quantity: number;
+  unit: string;
+  preparation_note: string | null;
+  is_scalable: boolean;
+  is_optional: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export type RecipeInstructionRow = {
+  id: string;
+  recipe_id: string;
+  step_number: number;
+  instruction: string;
+  created_at: string;
+}
+
+export type UserRecipeFavoriteRow = {
+  user_id: string;
+  recipe_id: string;
+  created_at: string;
+}
+
 /**
  * Insert/Update shapes: database-generated columns become optional, everything
  * else stays as declared. `Insert` still requires genuinely required columns,
@@ -373,6 +452,43 @@ export type Database = {
         Insertable<FoodFavoriteRow>,
         Updatable<FoodFavoriteRow>
       >;
+      ingredients: TableDefinition<
+        IngredientRow,
+        Insertable<
+          IngredientRow,
+          'category' | 'default_unit' | 'density_g_per_ml' | 'package_sizes' | 'food_id' | 'allergens'
+        >,
+        Updatable<IngredientRow>
+      >;
+      recipes: TableDefinition<
+        RecipeRow,
+        Insertable<
+          RecipeRow,
+          | 'slug' | 'description' | 'image_path' | 'prep_minutes' | 'cook_minutes' | 'difficulty'
+          | 'protein_per_serving' | 'carbs_per_serving' | 'fat_per_serving' | 'fiber_per_serving'
+          | 'dietary_tags' | 'allergens' | 'meal_prep_rating' | 'cost_band'
+          | 'source' | 'source_url' | 'is_public' | 'created_by'
+        >,
+        Updatable<RecipeRow>
+      >;
+      recipe_ingredients: TableDefinition<
+        RecipeIngredientRow,
+        Insertable<
+          RecipeIngredientRow,
+          'unit' | 'preparation_note' | 'is_scalable' | 'is_optional' | 'sort_order'
+        >,
+        Updatable<RecipeIngredientRow>
+      >;
+      recipe_instructions: TableDefinition<
+        RecipeInstructionRow,
+        Insertable<RecipeInstructionRow>,
+        Updatable<RecipeInstructionRow>
+      >;
+      user_recipe_favorites: TableDefinition<
+        UserRecipeFavoriteRow,
+        Insertable<UserRecipeFavoriteRow>,
+        Updatable<UserRecipeFavoriteRow>
+      >;
       progress_photos: TableDefinition<
         ProgressPhotoRow,
         Insertable<ProgressPhotoRow, 'taken_on' | 'pose'>,
@@ -403,6 +519,8 @@ export type Database = {
       consent_kind: ConsentKind;
       meal_type: MealType;
       food_source: FoodSource;
+      difficulty: Difficulty;
+      ingredient_category: IngredientCategory;
     };
     CompositeTypes: Record<string, never>;
   };

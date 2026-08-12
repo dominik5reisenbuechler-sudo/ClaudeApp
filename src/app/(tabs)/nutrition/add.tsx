@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader, SectionHeader } from '@/components/layout';
-import { Button, Callout, EmptyState, LoadingState, SearchInput, Text } from '@/components/ui';
+import { Button, Callout, Card, EmptyState, LoadingState, SearchInput, Text } from '@/components/ui';
 import { MEAL_LABELS } from '@/domain/nutrition/dailyTotals';
 import { CustomFoodSheet } from '@/features/nutrition/CustomFoodSheet';
 import { FoodCard } from '@/features/nutrition/FoodCard';
@@ -17,6 +17,7 @@ import {
   useFoodSearch,
   useRecentFoods,
 } from '@/hooks/useNutrition';
+import { useDeleteSavedMeal, useLogSavedMeal, useSavedMeals } from '@/hooks/useSavedMeals';
 import { cacheProviderFood } from '@/services/foodService';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -53,6 +54,9 @@ export default function AddFoodScreen() {
   const search = useFoodSearch(query);
   const recents = useRecentFoods();
   const favorites = useFavoriteFoods();
+  const savedMeals = useSavedMeals();
+  const logSavedMeal = useLogSavedMeal();
+  const deleteSavedMeal = useDeleteSavedMeal();
   const barcodeLookup = useBarcodeLookup();
 
   const isSearching = query.trim().length >= 2;
@@ -122,6 +126,54 @@ export default function AddFoodScreen() {
         />
       ) : (
         <>
+          {savedMeals.data && savedMeals.data.length > 0 ? (
+            <View>
+              <SectionHeader title="Saved meals" />
+              <View style={{ gap: theme.spacing.sm }}>
+                {savedMeals.data.map((meal) => (
+                  <Card
+                    key={meal.id}
+                    padding="sm"
+                    onPress={() => {
+                      void logSavedMeal
+                        .mutateAsync({ savedMeal: meal, mealType })
+                        .then(() => router.back())
+                        .catch((caught: unknown) =>
+                          setError(
+                            caught instanceof Error ? caught.message : 'Could not log that meal.',
+                          ),
+                        );
+                    }}
+                  >
+                    <View
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text variant="bodyStrong" numberOfLines={1}>
+                          {meal.name}
+                        </Text>
+                        <Text variant="caption" tone="tertiary" numberOfLines={1}>
+                          {meal.items.map((item) => item.food.name).join(', ')}
+                        </Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Delete saved meal ${meal.name}`}
+                        hitSlop={8}
+                        onPress={() => void deleteSavedMeal.mutateAsync(meal.id)}
+                      >
+                        <Text variant="body" tone="tertiary">
+                          ✕
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+              {logSavedMeal.isPending ? <LoadingState label="Logging that meal…" /> : null}
+            </View>
+          ) : null}
+
           {favorites.data && favorites.data.length > 0 ? (
             <View>
               <SectionHeader title="Favourites" />

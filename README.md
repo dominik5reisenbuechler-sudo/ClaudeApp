@@ -5,8 +5,9 @@ moves your weight trend, the trend reveals your real energy expenditure, that
 changes your targets, and your logged training changes your programme. Every
 recommendation is explainable from your own data.
 
-**Status: Phases 0–3 complete** — foundation, onboarding, the dashboard with
-weight and step logging, and nutrition tracking with barcode scanning. See
+**Status: Phases 0–4 complete** — foundation, onboarding, the dashboard with
+weight and step logging, nutrition tracking with barcode scanning, and the
+recipe system with macro-fit recommendations. See
 [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) for what ships when.
 
 ---
@@ -46,6 +47,9 @@ Apply the migrations in `supabase/migrations/` in filename order, either with
 the Supabase CLI (`supabase db push`) or by running each file against your
 project. They are ordinary SQL and are idempotent in ordering, not in content —
 run them once, in sequence.
+
+Then load `supabase/seed/` for the ingredient and recipe catalogue. Seeds run as
+the service role and are safe to re-run.
 
 RLS is enabled on every table in the same migration that creates it. A table
 with RLS on and no policy denies everything, which is the intended default.
@@ -93,9 +97,9 @@ Business-critical calculations are unit-tested with deterministic inputs:
 BMR and TDEE estimation, macro allocation, safety floors, weight moving
 averages and trend, rate-vs-goal assessment, step summarisation, pending-action
 derivation, food scaling and daily aggregation, food-data plausibility checks,
-barcode check digits, the Open Food Facts mapping, unit conversion and
-shopping-list aggregation, date and age arithmetic, and the onboarding-to-domain
-mapping.
+barcode check digits, the Open Food Facts mapping, recipe portion scaling,
+macro-fit recipe ranking, unit conversion and shopping-list aggregation, date
+and age arithmetic, and the onboarding-to-domain mapping.
 
 ```bash
 npm test
