@@ -179,6 +179,18 @@ if (health.response.status === 401) {
   );
 }
 
+// Supabase answers this endpoint 200 or 401. Anything else — 403 and 407 in
+// particular — is characteristic of something in between: a corporate proxy, a
+// VPN, or a sandboxed network that does not allow the host. Reporting that as a
+// project fault sends people to rewrite a .env that was already correct.
+if (health.response.status === 403 || health.response.status === 407) {
+  fail(
+    `Something between this machine and ${parsed.host} refused the connection (${health.response.status}).`,
+    'This is a network intermediary rather than your project — a proxy, VPN, or firewall.',
+    'Your URL and key are almost certainly fine. Try from a different network.',
+  );
+}
+
 if (!health.response.ok) {
   fail(`Auth service answered ${health.response.status} ${health.response.statusText}.`);
 }
