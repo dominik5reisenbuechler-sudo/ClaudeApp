@@ -81,6 +81,18 @@ the Supabase CLI (`supabase db push`) or by running each file against your
 project. They are ordinary SQL and are idempotent in ordering, not in content —
 run them once, in sequence.
 
+Without the CLI, `npm run bundle:sql` concatenates all of it into two files in
+the correct order:
+
+```bash
+npm run bundle:sql
+# supabase/bundle/all-migrations.sql   → paste into the SQL editor first
+# supabase/bundle/all-seeds.sql        → then this one
+```
+
+Order is the part that matters. A seed run before its migration fails against a
+table that does not exist yet.
+
 Then load `supabase/seed/` in filename order for the ingredient and recipe
 catalogue, the exercise model, the evidence rules the recommendation engine
 cites, the achievement catalogue, and the per-exercise form cues. Seeds run as
@@ -101,6 +113,7 @@ on the first path segment of each object.
 | `npm test` | Vitest (domain + utils) |
 | `npm run verify` | All three — the gate before any merge |
 | `npm run check:supabase` | Diagnose the connection: URL, key, tables, seeds |
+| `npm run bundle:sql` | Concatenate migrations and seeds into two pasteable files |
 
 ## How the code is organised
 

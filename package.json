@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:supabase": "node scripts/check-supabase.mjs",
+    "bundle:sql": "node scripts/bundle-sql.mjs",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
