@@ -49,11 +49,30 @@ React Native + Expo (SDK 57) · TypeScript (strict) · Expo Router · Supabase
 ```bash
 npm install
 cp .env.example .env      # fill in your Supabase project URL and anon key
+npm run check:supabase    # verify the connection before starting
 npm start
 ```
 
 Without a `.env`, the app boots to a configuration screen explaining what is
 missing rather than failing silently.
+
+### When the app sits on "Getting things ready…"
+
+Run `npm run check:supabase`. It asks the same questions the app asks at
+startup — is the URL reachable, does the key work, do the tables exist, are the
+seeds loaded — and stops at the first one that fails. Almost always the answer
+is one of:
+
+1. **The migrations have not been applied.** The app queries tables that are not
+   there yet. This is the most common cause by a distance.
+2. **`.env` changed while the dev server was running.** It is read once at
+   launch; a corrected value does nothing until Expo is stopped and restarted.
+3. **The project is paused.** Free projects pause after inactivity and resume
+   from the dashboard.
+
+The app itself no longer waits indefinitely: session restoration times out, and
+a boot that has not resolved after twelve seconds replaces the spinner with the
+same checklist and the host it is actually pointed at.
 
 ### Database
 
@@ -81,6 +100,7 @@ on the first path segment of each object.
 | `npm run lint` | ESLint |
 | `npm test` | Vitest (domain + utils) |
 | `npm run verify` | All three — the gate before any merge |
+| `npm run check:supabase` | Diagnose the connection: URL, key, tables, seeds |
 
 ## How the code is organised
 

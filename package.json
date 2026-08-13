@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:supabase": "node scripts/check-supabase.mjs",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {

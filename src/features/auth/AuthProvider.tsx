@@ -18,11 +18,28 @@ interface AuthContextValue {
   user: User | null;
   /** True until the persisted session has been read from storage. */
   isLoading: boolean;
+  /**
+   * Set when restoring the session failed or timed out. The app continues as
+   * signed-out — this exists so the UI can say *why* rather than presenting an
+   * unexplained sign-in screen.
+   */
+  startupError: string | null;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
 }
+
+/**
+ * How long to wait for the stored session before giving up on it.
+ *
+ * Reading local storage is instant; the slow path is a stored token that has
+ * expired, where the client attempts a network refresh first. If that cannot
+ * complete — wrong project URL, no connectivity, storage blocked by the
+ * browser — the app must still boot. Waiting forever turns a fixable
+ * configuration mistake into a screen that never changes and says nothing.
+ */
+const SESSION_RESTORE_TIMEOUT_MS = 8_000;
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -32,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // value already reflects the final state rather than being corrected by an
   // effect on the first render.
   const [isLoading, setIsLoading] = useState(hasSupabase);
+  const [startupError, setStartupError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasSupabase) return;
@@ -39,19 +57,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
     let active = true;
 
-    void supabase.auth.getSession().then(({ data }) => {
+    /**
+     * Stop waiting, once. Every path out of session restoration goes through
+     * here — success, failure and timeout — so there is no combination of them
+     * that leaves the app on its loading screen.
+     */
+    const settle = (error: string | null) => {
       if (!active) return;
-      setSession(data.session);
+      active = false;
+      clearTimeout(timer);
+      if (error !== null) setStartupError(error);
       setIsLoading(false);
-    });
+    };
+
+    const timer = setTimeout(
+      () =>
+        settle(
+          'Could not reach your Supabase project while restoring your session. Check that EXPO_PUBLIC_SUPABASE_URL points at your project and that you are online, then restart the dev server.',
+        ),
+      SESSION_RESTORE_TIMEOUT_MS,
+    );
+
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!active) return;
+        setSession(data.session);
+        settle(error ? error.message : null);
+      })
+      .catch((cause: unknown) => {
+        // Reached when the storage adapter throws — a browser with storage
+        // blocked, most often — or when the refresh request fails outright.
+        settle(
+          cause instanceof Error
+            ? `Could not restore your session: ${cause.message}`
+            : 'Could not restore your session.',
+        );
+      });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
+      // A real auth event supersedes a failed restore: signing in successfully
+      // means whatever went wrong a moment ago is no longer worth reporting.
+      setStartupError(null);
       setIsLoading(false);
     });
 
     return () => {
       active = false;
+      clearTimeout(timer);
       subscription.subscription.unsubscribe();
     };
   }, []);
@@ -61,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       isLoading,
+      startupError,
 
       signUp: async (email, password, displayName) => {
         const { error } = await getSupabase().auth.signUp({
@@ -90,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
       },
     }),
-    [session, isLoading],
+    [session, isLoading, startupError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
