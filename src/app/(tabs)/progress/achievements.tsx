@@ -5,6 +5,7 @@ import { Card, LoadingState, ProgressBar, Text } from '@/components/ui';
 import { CATEGORY_LABELS } from '@/domain/gamification/achievements';
 import type { AchievementStatus } from '@/domain/gamification/achievements';
 import { LevelCard } from '@/features/gamification/LevelCard';
+import { XpBreakdown } from '@/features/gamification/XpBreakdown';
 import { ProgressSubNav } from '@/features/progress/ProgressSubNav';
 import { useAchievements } from '@/hooks/useGamification';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -39,6 +40,9 @@ export default function AchievementsScreen() {
       <ProgressSubNav active="achievements" />
 
       <LevelCard />
+
+      <SectionHeader title="How XP is earned" />
+      <XpBreakdown />
 
       {ACHIEVEMENT_CATEGORIES.map((category) => {
         const inCategory = statuses.filter((status) => status.definition.category === category);

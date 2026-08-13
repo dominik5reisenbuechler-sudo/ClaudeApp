@@ -486,3 +486,44 @@ type checking does not catch a broken import graph or a route conflict.
 | 8 | clean | clean | 611 tests / 33 files | 44 routes |
 | 9 | clean | clean | 681 tests / 37 files | 46 routes |
 | 10 | clean | clean | 767 tests / 41 files | 48 routes |
+| 11 | clean | clean | 839 tests / 43 files | 49 routes |
+
+## Phase 11 — progress photos, exercise coaching, perfect-day bonus
+
+Three additions after phase 10, none of which changed an existing engine.
+
+**Progress photos.** The `progress_photos` table has existed since migration
+0004 with nothing writing to it; migration 0012 adds the private bucket, the
+storage policies and the two columns the flow needed (`weight_kg`, `note`).
+Objects live at `<user_id>/<file>` and every policy authorises on that first
+segment. Before/after pairing is pure and tested: same pose only, different days
+only. There is no UPDATE policy, because a photo is a record of a moment.
+
+Account deletion now removes bucket objects before rows. This was a real gap
+rather than a new feature — `on delete cascade` reaches rows, not storage, so
+deleting the table alone would have left the images sitting in the bucket after
+the user was told their data was gone.
+
+**Exercise coaching.** `instructions` and `common_mistakes` have been columns
+since migration 0008 and empty since; seed 0005 fills them for all 41 exercises,
+and the cues are reachable from inside the workout logger rather than only from
+the database screen.
+
+`video_url` is left null deliberately. Hard-coding YouTube ids puts the app's
+authority behind links that rot, so a missing video falls back to a
+Shorts-filtered search for the exact exercise name and the UI labels the two
+differently — "watch the demonstration" versus "find a demonstration". Set the
+column on any row where a clip has actually been checked and it is picked up
+automatically.
+
+**Perfect-day bonus.** +75 XP when calories, protein, steps and the weigh-in all
+land on one day. Training is excluded for the same reason the training streak
+excuses rest days: a bonus obtainable only by training daily pays people to skip
+their own deload. The bonus is derived from the events already awarded rather
+than re-tested against the logs, so it cannot disagree with them.
+
+Progress → Achievements now lists every XP rule with its rate and what it has
+earned lately. `XP_LABELS` existed and had never been rendered anywhere; a
+reward system whose rules are invisible teaches people to guess at them.
+
+Still outstanding: the two native health modules, unchanged from phase 10.

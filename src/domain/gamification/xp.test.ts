@@ -7,6 +7,7 @@ import {
   xpForDay,
   xpForLevel,
   CALORIE_BAND_PERCENT,
+  PERFECT_DAY_KINDS,
   XP_AWARDS,
   XP_LEVEL_STEP,
 } from './xp';
@@ -33,6 +34,7 @@ describe('xpForDay', () => {
   it('awards everything on a day that did everything', () => {
     expect(kinds(xpForDay(day()))).toEqual([
       'calorie_target',
+      'perfect_day',
       'protein_target',
       'step_goal',
       'weight_logged',
@@ -59,6 +61,49 @@ describe('xpForDay', () => {
 
   it('is idempotent — the same day always produces the same events', () => {
     expect(xpForDay(day())).toEqual(xpForDay(day()));
+  });
+});
+
+describe('xpForDay — the perfect-day bonus', () => {
+  const hasBonus = (over: Partial<DayForXp> = {}): boolean =>
+    xpForDay(day(over)).some((event) => event.kind === 'perfect_day');
+
+  it('pays a bonus when all four daily habits landed', () => {
+    const bonus = xpForDay(day()).find((event) => event.kind === 'perfect_day');
+
+    expect(bonus?.xp).toBe(XP_AWARDS.perfect_day);
+    expect(bonus?.earnedOn).toBe('2025-06-22');
+    expect(bonus?.context).toEqual({ kinds: [...PERFECT_DAY_KINDS] });
+  });
+
+  it('does not require a workout — a rest day can still be perfect', () => {
+    expect(hasBonus({ workoutsCompleted: 0 })).toBe(true);
+  });
+
+  it.each(PERFECT_DAY_KINDS)('withholds the bonus when %s is missing', (missing) => {
+    const breaks: Record<(typeof PERFECT_DAY_KINDS)[number], Partial<DayForXp>> = {
+      calorie_target: { energyKcal: 2000 },
+      protein_target: { proteinG: 80 },
+      step_goal: { steps: 1200 },
+      weight_logged: { weightLogged: false },
+    };
+
+    expect(hasBonus(breaks[missing])).toBe(false);
+  });
+
+  it('withholds the bonus on a day too partial to qualify at all', () => {
+    // Under-logged food takes calories and protein with it, so the bonus goes
+    // too — it can never be earned on a day the nutrition awards were refused.
+    expect(hasBonus({ energyKcal: 600, proteinG: 200 })).toBe(false);
+  });
+
+  it('pays the bonus at most once', () => {
+    const bonuses = xpForDay(day()).filter((event) => event.kind === 'perfect_day');
+    expect(bonuses).toHaveLength(1);
+  });
+
+  it('is worth less than a workout, so it cannot become the point of the day', () => {
+    expect(XP_AWARDS.perfect_day).toBeLessThan(XP_AWARDS.workout_completed);
   });
 });
 

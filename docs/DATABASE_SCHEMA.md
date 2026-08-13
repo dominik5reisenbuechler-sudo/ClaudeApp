@@ -105,8 +105,28 @@ overwritten, so "why did my target change?" is always answerable.
   `estimated_kcal`, `source`.
 - **`recovery_logs`** — `sleep_hours`, `sleep_quality`, `stress`, `soreness jsonb`
   (muscle → 0-4), `joint_discomfort`, `resting_hr`, `hrv_ms`, `motivation`.
-- **`progress_photos`** — `storage_path`, `taken_on`, `pose`. Storage bucket is
-  private; access via signed URLs only.
+- **`progress_photos`** — `storage_path`, `taken_on`, `pose` (front/side/back/
+  other, constrained), `weight_kg`, `note`. Unique on `(user_id, storage_path)`,
+  so a retried upload cannot produce two rows for one object.
+
+  The bucket (`progress-photos`, migration 0012) is **private**; images are
+  served only through short-lived signed URLs, so a leaked link expires rather
+  than standing open. Objects live at `<user_id>/<file>` and every storage
+  policy authorises on that first path segment — the path is not a naming
+  convention, it is the authorisation key, the storage equivalent of
+  `is_owner(user_id)`.
+
+  There is deliberately **no UPDATE policy**: a photo is a record of a moment,
+  like an unlocked achievement, and swapping the image behind an existing row
+  would make the timeline quietly untrue. Add and delete only.
+
+  `weight_kg` is a snapshot written at upload time rather than a join onto
+  `weight_logs`. The point of a photo is what the scale said *that day*, and a
+  later correction to the log must not retitle an old picture.
+
+  Account deletion removes the bucket objects **before** the rows — the rows are
+  what tell us which objects exist, and `on delete cascade` reaches rows, not
+  storage. See `deleteStoredPhotos` in `services/accountService.ts`.
 
 ### Nutrition
 

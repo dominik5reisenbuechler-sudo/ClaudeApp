@@ -15,7 +15,10 @@ XP ledger, achievements, and five streaks whose training streak excuses
 scheduled rest days).
 
 Phase 10 adds shopping-list pack optimisation, health-sync reconciliation and a
-grounded AI coach that cannot write anything without a confirmation tap. The two
+grounded AI coach that cannot write anything without a confirmation tap. Since
+then: progress photos in a private bucket with before/after pairing, written
+form cues and a demonstration link on all 41 exercises, and a perfect-day XP
+bonus for landing calories, protein, steps and the weigh-in on one day. The two
 native health modules — HealthKit and Health Connect — are the one thing
 outstanding; [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md) sets out why, along with
 what ships when.
@@ -59,12 +62,15 @@ the Supabase CLI (`supabase db push`) or by running each file against your
 project. They are ordinary SQL and are idempotent in ordering, not in content —
 run them once, in sequence.
 
-Then load `supabase/seed/` for the ingredient and recipe catalogue, the exercise
-model, the evidence rules the recommendation engine cites, and the achievement
-catalogue. Seeds run as the service role and are safe to re-run.
+Then load `supabase/seed/` in filename order for the ingredient and recipe
+catalogue, the exercise model, the evidence rules the recommendation engine
+cites, the achievement catalogue, and the per-exercise form cues. Seeds run as
+the service role and are safe to re-run.
 
 RLS is enabled on every table in the same migration that creates it. A table
-with RLS on and no policy denies everything, which is the intended default.
+with RLS on and no policy denies everything, which is the intended default. The
+same applies to the private `progress-photos` bucket, whose policies authorise
+on the first path segment of each object.
 
 ## Scripts
 
@@ -115,10 +121,11 @@ conversion, shopping-list aggregation and retail pack selection, fractional
 training volume, the progression engine and its blocking conditions, split
 selection and programme generation, personal-record detection, strength trends,
 training consistency, the adaptive TDEE estimator and its confidence gates, the
-calorie/volume/deload recommendation engines, XP awards, streaks and achievement
-unlocks, health-sample reconciliation, the coach's context assembly and its
-action vocabulary, date and age arithmetic, and the onboarding-to-domain
-mapping.
+calorie/volume/deload recommendation engines, XP awards including the
+perfect-day bonus, streaks and achievement unlocks, health-sample
+reconciliation, progress-photo paths and before/after pairing, exercise video
+URL parsing, the coach's context assembly and its action vocabulary, date and
+age arithmetic, and the onboarding-to-domain mapping.
 
 ```bash
 npm test

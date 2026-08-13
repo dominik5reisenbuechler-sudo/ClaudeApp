@@ -3,9 +3,19 @@ import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader } from '@/components/layout';
-import { Button, Callout, Card, Chip, ErrorState, LoadingState, Text } from '@/components/ui';
+import {
+  BottomSheet,
+  Button,
+  Callout,
+  Card,
+  Chip,
+  ErrorState,
+  LoadingState,
+  Text,
+} from '@/components/ui';
 import { describeRecord } from '@/domain/progress/personalRecords';
 import type { DetectedRecord } from '@/domain/progress/personalRecords';
+import { ExerciseCoachingPanel } from '@/features/training/ExerciseCoachingPanel';
 import { ExerciseLogger } from '@/features/training/ExerciseLogger';
 import { RestTimer } from '@/features/training/RestTimer';
 import {
@@ -44,6 +54,7 @@ export default function WorkoutSessionScreen() {
   const [sessionRpe, setSessionRpe] = useState<number | null>(null);
   const [records, setRecords] = useState<DetectedRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showingForm, setShowingForm] = useState(false);
 
   const day = useMemo(() => {
     if (!session.data?.workout_day_id || !plan.data) return null;
@@ -190,6 +201,15 @@ export default function WorkoutSessionScreen() {
           </View>
 
           {current ? (
+            <Button
+              label="How to do this exercise"
+              variant="ghost"
+              size="sm"
+              onPress={() => setShowingForm(true)}
+            />
+          ) : null}
+
+          {current ? (
             <ExerciseLogger
               sessionId={session.data.id}
               prescription={current}
@@ -239,6 +259,24 @@ export default function WorkoutSessionScreen() {
           </Text>
         </View>
       </Card>
+
+      <BottomSheet
+        visible={showingForm && current !== undefined}
+        onClose={() => setShowingForm(false)}
+        title={current?.exercise?.name ?? 'How to do this'}
+      >
+        {current ? (
+          <ExerciseCoachingPanel
+            exercise={{
+              name: current.exercise?.name ?? formatExercise(current.exercise_id),
+              instructions: exerciseById.get(current.exercise_id)?.instructions ?? [],
+              common_mistakes: exerciseById.get(current.exercise_id)?.common_mistakes ?? [],
+              rom_notes: exerciseById.get(current.exercise_id)?.rom_notes ?? null,
+              video_url: exerciseById.get(current.exercise_id)?.video_url ?? null,
+            }}
+          />
+        ) : null}
+      </BottomSheet>
     </Screen>
   );
 }

@@ -28,6 +28,7 @@ export const XP_AWARDS: Record<XpKind, number> = {
   protein_target: 50,
   step_goal: 30,
   weight_logged: 10,
+  perfect_day: 75,
   meal_plan: 30,
   checkin_completed: 60,
   // Achievement rewards vary; the value is carried on the event itself.
@@ -40,6 +41,7 @@ export const XP_LABELS: Record<XpKind, string> = {
   protein_target: 'Protein target hit',
   step_goal: 'Step goal reached',
   weight_logged: 'Weighed in',
+  perfect_day: 'Perfect day',
   meal_plan: 'Meal plan for the week',
   checkin_completed: 'Weekly check-in',
   achievement: 'Achievement unlocked',
@@ -102,11 +104,32 @@ export interface DayForXp {
 }
 
 /**
+ * The four daily habits a perfect day is made of.
+ *
+ * Training is deliberately **not** among them. A rest day is part of a
+ * programme, not a failure of one, and a bonus that could only be earned by
+ * training every day would pay people to ignore their own deload — the same
+ * reasoning that makes the training streak excuse scheduled rest days
+ * (`streaks.ts`). What is left is the set of things that genuinely should
+ * happen daily: eat to your target, hit your protein, move, and weigh in.
+ */
+export const PERFECT_DAY_KINDS = [
+  'calorie_target',
+  'protein_target',
+  'step_goal',
+  'weight_logged',
+] as const satisfies readonly XpKind[];
+
+/**
  * The XP events a single day has earned.
  *
  * At most one of each kind per day, however many workouts were logged: two
  * sessions in a day is not twice the training, and paying for it would reward
  * splitting one session in half.
+ *
+ * A day that earns all four of `PERFECT_DAY_KINDS` earns a bonus on top. The
+ * bonus is smaller than a workout on purpose: it should feel like a nice
+ * result of a good day, not like the day's real objective.
  */
 export function xpForDay(day: DayForXp): XpEvent[] {
   const events: XpEvent[] = [];
@@ -162,6 +185,18 @@ export function xpForDay(day: DayForXp): XpEvent[] {
         context: { proteinG: day.proteinG, target: day.targets.proteinG },
       });
     }
+  }
+
+  // Derived from the events above rather than re-tested against the logs, so
+  // the bonus can never disagree with the awards it is a bonus for.
+  const earned = new Set(events.map((event) => event.kind));
+  if (PERFECT_DAY_KINDS.every((kind) => earned.has(kind))) {
+    events.push({
+      kind: 'perfect_day',
+      xp: XP_AWARDS.perfect_day,
+      earnedOn: day.date,
+      context: { kinds: [...PERFECT_DAY_KINDS] },
+    });
   }
 
   return events;

@@ -11,6 +11,7 @@ import {
   SearchInput,
   Text,
 } from '@/components/ui';
+import { ExerciseCoachingPanel } from '@/features/training/ExerciseCoachingPanel';
 import { TrainingSubNav } from '@/features/training/TrainingSubNav';
 import { useContributionMap, useExerciseAlternatives, useExercises } from '@/hooks/useTraining';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -101,11 +102,7 @@ export default function ExercisesScreen() {
               increments
             </Text>
 
-            {selected.rom_notes ? (
-              <Text variant="caption" tone="secondary">
-                {selected.rom_notes}
-              </Text>
-            ) : null}
+            <ExerciseCoachingPanel exercise={selected} />
 
             <View style={{ gap: theme.spacing.sm }}>
               <Text variant="label" tone="tertiary">

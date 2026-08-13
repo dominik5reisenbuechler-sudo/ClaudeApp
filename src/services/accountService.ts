@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
+import { PHOTO_BUCKET } from './progressPhotoService';
 
 /**
  * Account data export and deletion (GDPR — CLAUDE.md §56).
@@ -11,6 +12,12 @@ import { getSupabase } from '@/lib/supabase';
  * belongs in a Supabase Edge Function calling `auth.admin.deleteUser`, and once
  * that exists the `on delete cascade` on every table makes it a single call.
  * Until then this function is the honest maximum, and it says so to the caller.
+ *
+ * Stored files need explicit handling. `on delete cascade` reaches rows, not
+ * bucket objects, so deleting `progress_photos` alone would leave the images
+ * themselves sitting in storage after the user was told their data was gone.
+ * Photos are the most sensitive thing here, so they are removed first and
+ * their absence is reported rather than assumed.
  */
 
 /** Order matters only in that children go before parents. */
@@ -30,6 +37,8 @@ const USER_SCOPED_TABLES = [
 export interface DeletionResult {
   /** Tables successfully cleared. */
   cleared: string[];
+  /** Stored photo objects removed from the bucket. */
+  filesRemoved: number;
   /**
    * False when the login record still exists because no server-side deletion
    * function is deployed. The UI must not claim a full deletion in that case.
@@ -41,6 +50,10 @@ export async function deleteAllUserData(userId: string): Promise<DeletionResult>
   const supabase = getSupabase();
   const cleared: string[] = [];
 
+  // Files before rows. The rows are what tells us which objects exist, so
+  // dropping them first would strand every image with no way left to find it.
+  const filesRemoved = await deleteStoredPhotos(userId);
+
   for (const table of USER_SCOPED_TABLES) {
     const { error } = await supabase.from(table).delete().eq('user_id', userId);
     if (error) throw new Error(`Failed to delete ${table}: ${error.message}`);
@@ -51,7 +64,33 @@ export async function deleteAllUserData(userId: string): Promise<DeletionResult>
   if (profileError) throw new Error(`Failed to delete profile: ${profileError.message}`);
   cleared.push('profiles');
 
-  return { cleared, authRecordRemoved: false };
+  return { cleared, filesRemoved, authRecordRemoved: false };
+}
+
+/**
+ * Remove every stored progress photo for a user.
+ *
+ * Throws rather than continuing quietly on failure. A deletion that reports
+ * success while images remain in the bucket is the one outcome this function
+ * exists to prevent, so a storage error has to stop the whole operation and
+ * surface — the user can retry, and nothing has claimed to be gone yet.
+ */
+async function deleteStoredPhotos(userId: string): Promise<number> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('progress_photos')
+    .select('storage_path')
+    .eq('user_id', userId);
+  if (error) throw new Error(`Failed to list stored photos: ${error.message}`);
+
+  const paths = (data ?? []).map((row) => row.storage_path);
+  if (paths.length === 0) return 0;
+
+  const removal = await supabase.storage.from(PHOTO_BUCKET).remove(paths);
+  if (removal.error) throw new Error(`Failed to delete stored photos: ${removal.error.message}`);
+
+  return paths.length;
 }
 
 /**

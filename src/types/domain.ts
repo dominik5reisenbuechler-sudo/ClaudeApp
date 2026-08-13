@@ -121,6 +121,7 @@ export const XP_KINDS = [
   'protein_target',
   'step_goal',
   'weight_logged',
+  'perfect_day',
   'meal_plan',
   'checkin_completed',
   'achievement',

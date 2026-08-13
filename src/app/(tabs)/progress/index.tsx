@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Screen, ScreenHeader, SectionHeader } from '@/components/layout';
 import {
@@ -42,6 +43,7 @@ const SITES: readonly { id: MeasurementSite; label: string }[] = [
  */
 export default function BodyProgressScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const today = todayIsoDate();
 
   const weights = useWeightLogs(180, today);
@@ -184,10 +186,13 @@ export default function BodyProgressScreen() {
         </Text>
       </View>
 
-      <Callout tone="info" title="Progress photos are not here yet">
-        They need a private storage bucket and an upload flow, which is deliberately not part of
-        this phase. Weight, measurements and strength cover the same ground in the meantime.
-      </Callout>
+      <Card onPress={() => router.push('/progress/photos')}>
+        <Text variant="bodyStrong">Progress photos</Text>
+        <Text variant="caption" tone="secondary">
+          The measurement the scale cannot make. Stored privately, and the only evidence that still
+          shows something during a recomposition, when bodyweight refuses to move at all.
+        </Text>
+      </Card>
 
       <MeasurementSheet
         site={sheetSite}

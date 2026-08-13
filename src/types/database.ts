@@ -199,12 +199,22 @@ export type RecoveryLogRow = Timestamps & {
   hrv_ms: number | null;
 }
 
+/**
+ * A progress photo. Only the path is stored — the bucket is private and images
+ * are served through short-lived signed URLs (migration 0012).
+ *
+ * `weight_kg` is a snapshot taken at upload time rather than a join onto
+ * `weight_logs`: the point of a photo is what the scale said *that day*, and a
+ * later correction to the log should not silently retitle an old picture.
+ */
 export type ProgressPhotoRow = {
   id: string;
   user_id: string;
   taken_on: IsoDate;
   storage_path: string;
   pose: string | null;
+  weight_kg: number | null;
+  note: string | null;
   created_at: string;
 }
 
@@ -856,7 +866,7 @@ export type Database = {
       >;
       progress_photos: TableDefinition<
         ProgressPhotoRow,
-        Insertable<ProgressPhotoRow, 'taken_on' | 'pose'>,
+        Insertable<ProgressPhotoRow, 'taken_on' | 'pose' | 'weight_kg' | 'note'>,
         Updatable<ProgressPhotoRow>
       >;
       weekly_checkins: TableDefinition<

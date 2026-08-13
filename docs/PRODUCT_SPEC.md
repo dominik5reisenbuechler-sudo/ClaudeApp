@@ -125,7 +125,21 @@ Programme generator for 2–6 days/week. Exercise database with primary/secondar
 muscles, equipment, movement pattern, rep ranges, cues, common mistakes and
 alternatives. Fractional set crediting (bench press credits chest fully,
 triceps and front delts partially). Workout logger with previous-performance
-reference, target reps, target RIR, and a rest timer. Progression engine
+reference, target reps, target RIR, and a rest timer.
+
+**Every exercise explains itself.** All 41 carry ordered setup-and-execution
+steps and the mistakes that actually show up in a gym, reachable both from the
+exercise database and from a "how to do this exercise" sheet inside the logger,
+where it is needed. Cues are things the lifter can check on themselves —
+"keep the elbows pinned at the sides", not "maximise mechanical tension", which
+cannot be observed by the person doing it.
+
+Each also offers a video. Where the catalogue vouches for a specific clip it
+links to it; where it does not, it opens a YouTube search for that exact
+exercise, filtered towards short clips, and the button says which of the two it
+is doing. The seed ships **no hard-coded video ids on purpose**: an id that
+rots or was mistyped sends someone to an unrelated or deleted clip with the
+app's authority behind it, which is worse than no link at all. Progression engine
 (double progression by default). Autoregulation from post-session soreness,
 joint discomfort, sleep and stress. Deload suggested on evidence of accumulated
 fatigue, never on a fixed calendar.
@@ -134,7 +148,19 @@ fatigue, never on a fixed calendar.
 
 Bodyweight (daily, 7-day average, 30-day trend), measurements (waist, chest,
 arms, thighs, hips, calves), strength/estimated-1RM progression, weekly sets per
-muscle, workout consistency, calories/protein/steps adherence, optional photos.
+muscle, workout consistency, calories/protein/steps adherence.
+
+**Progress photos** are their own section. Four angles (front, side, back,
+other), captured from the camera or the library, stored in a private bucket and
+served only through short-lived signed URLs. Each photo snapshots that day's
+weigh-in rather than joining to it, so a later correction to the log cannot
+retitle an old picture.
+
+The app pairs the oldest and newest shot of a pose into a before/after, and
+refuses two cases on purpose: never across poses, and never within a single
+day. Both produce a picture that argues for a change nothing actually measured.
+Photos matter most during a recomposition, where bodyweight genuinely does not
+move and the scale is the least informative instrument available.
 
 ### 4.8 Adaptive engine
 
@@ -167,9 +193,17 @@ new target; rejecting it changes nothing. Neither is ever deleted.
 
 XP for completed workouts (+100), calorie target (+50), protein target (+50),
 steps (+30), weight logged (+10), weekly meal plan (+30), weekly check-in
-(+60). Achievements for milestones. Separate streaks for Training, Nutrition,
-Protein, Steps and Meal Planning — the **training streak respects scheduled
-rest days**.
+(+60), and a **perfect-day bonus (+75)** when calories, protein, steps and the
+weigh-in all land on the same day. Achievements for milestones. Separate
+streaks for Training, Nutrition, Protein, Steps and Meal Planning — the
+**training streak respects scheduled rest days**.
+
+The perfect-day bonus deliberately excludes training, for the same reason the
+training streak excuses rest days: a bonus obtainable only by training daily
+pays people to skip their own deload. It is also worth less than a workout, so
+it reads as a good day rather than the day's objective. The full table, with
+what each kind has earned recently, is shown in Progress → Achievements —
+an unstated reward teaches people to guess at the rules and then game them.
 
 Three rules keep this from working against the product:
 
